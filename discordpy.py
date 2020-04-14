@@ -17,10 +17,12 @@ async def on_ready():
 async def load(ctx, name: str):
     """Loads an extension from the extension folder"""
     try:
-        bot.load_extension(f'extensions.{name}')
+        if ctx.author in config.owners:
+            bot.load_extension(f'extensions.{name}')
+            await ctx.send(f'Loaded Extension {name}')
     except Exception as E:
         ctx.send(f'Extension {name} failed: {E}')
-    await ctx.send(f'Loaded Extension {name}')
+
 
 
 @bot.command()
