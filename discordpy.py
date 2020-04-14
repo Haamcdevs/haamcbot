@@ -24,7 +24,6 @@ async def load(ctx, name: str):
         ctx.send(f'Extension {name} failed: {E}')
 
 
-
 @bot.command()
 async def loadcog(ctx, cog: str):
     """Loads a cog from the cogs folder"""

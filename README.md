@@ -1,7 +1,7 @@
-# Simple Discord Bot with Plugin Support
+# Simple Discord Bot for HAAMC
 
 Core Requires:
 1. discord.py
 
 Plugin Requires:
-1. MAL - python-mal
+1. MAL - kikan
