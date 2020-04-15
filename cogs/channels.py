@@ -18,12 +18,11 @@ class Channels(commands.Cog):
         return anime
 
     @staticmethod
-    async def _joinmessage(channel, categorychannel, malurl):
-        maldata = Channels._getmaldata(malurl)
+    async def _joinmessage(channel, categorychannel, maldata):
         embed = discord.Embed(
             title=maldata['title'],
             type='rich',
-            url=malurl
+            url=maldata['url']
         )
         # embed.set_author(name=maldata['title'], icon_url='', url=malurl)
         embed.set_footer(text='Druk op de reactions om te joinen / leaven')
@@ -45,10 +44,12 @@ class Channels(commands.Cog):
         for cat in guild.categories:
             if cat.name == 'Anime':
                 category = cat
+        # Get maldata here because we need it for the title
+        maldata = Channels._getmaldata(malurl)
         newchan = await guild.create_text_channel(
             name=title,
             category=category,
-            topic=f'{title} || {malurl}',
+            topic=f"{title} || {maldata['url']}",
             position=len(category.channels),
             reason=f"Aangevraagd door {ctx.author}",
             overwrites={
@@ -61,7 +62,7 @@ class Channels(commands.Cog):
                 for chan in cat.channels:
                     if 'anime' in chan.name:
                         categorychannel = chan
-        await self._joinmessage(newchan, categorychannel, malurl)
+        await self._joinmessage(newchan, categorychannel, maldata)
         await ctx.message.delete()
         await newchan.send(f"Hallo iedereen! In deze channel kijken we naar **{title}**.\n{malurl}")
 
