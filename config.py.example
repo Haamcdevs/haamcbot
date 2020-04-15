@@ -2,13 +2,6 @@ authkey = 'Put Discord Build-a-bot token here'
 commandchar = '!'         # The character(s) that should prepend a command
 owners = ['XSlicer#6364'] # List of owners, who can load plugins
 
-cogs = []
-
-extensions = [
-    'info',
-    'setchannel'
-]
-
 role_global_mod = 403111255327375360
 role_anime_mod = 321
 role_user = 403111255327375360
