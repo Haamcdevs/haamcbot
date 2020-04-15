@@ -49,7 +49,7 @@ class Channels(commands.Cog):
         newchan = await guild.create_text_channel(
             name=title,
             category=category,
-            topic=f"{title} || {maldata['url']}",
+            topic=f"{maldata['title']} || {maldata['url']}",
             position=len(category.channels),
             reason=f"Aangevraagd door {ctx.author}",
             overwrites={
