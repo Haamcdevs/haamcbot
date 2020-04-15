@@ -6,7 +6,7 @@ class Cots(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(pass_context=True, name='cots_start')
+    @commands.group(name='cots')
     @commands.has_role(config.role_global_mod)
     async def start(self, ctx):
         user = ctx.message.author
