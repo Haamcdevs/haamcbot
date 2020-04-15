@@ -38,7 +38,7 @@ class Channels(commands.Cog):
         await msg.add_reaction('⏹')
 
     @commands.command(pass_context=True)
-    @commands.has_any_role("Shinsengumi", "Shinobi")
+    @commands.has_any_role("Shinsengumi", "Shinobi", "Anime Mod")
     async def animechannel(self, ctx, title, malurl):
         guild = ctx.message.guild
         category = None
