@@ -4,7 +4,7 @@ from discord.ext import commands
 import time
 
 
-bot = commands.Bot(command_prefix='?', description='Description')
+bot = commands.Bot(command_prefix=config.commandchar, description='Description')
 
 
 @bot.event
