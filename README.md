@@ -1,7 +1,8 @@
 # Simple Discord Bot for HAAMC
 
 Core Requires:
-1. discord.py
+1. python >3.6
+2. discord.py
 
 Plugin Requires:
-1. MAL - kikan
+1. jikanpy - Myanimelist unoficcial api client
