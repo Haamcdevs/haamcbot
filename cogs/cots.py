@@ -60,7 +60,7 @@ class Cots(commands.Cog):
 
     @staticmethod
     def set_season(season: str):
-        fd = open('./var/cots_season', 'w')
+        fd = open('./var/cots_season', 'w+')
         fd.write(season)
         fd.close()
 
