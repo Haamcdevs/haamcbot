@@ -60,16 +60,13 @@ class Cots(commands.Cog):
 
     @staticmethod
     def set_season(season: str):
-        fd = open('./var/cots_season', 'w+')
-        fd.write(season)
-        fd.close()
+        with open('./var/cots_season', 'w+') as fd:
+            fd.write(season)
 
     @staticmethod
     def get_season():
-        fd = open('./var/cots_season', 'r')
-        season = fd.read()
-        fd.close()
-        return season
+        with open('./var/cots_season', 'r') as fd:
+            return fd.read()
 
     @commands.group(name='cots')
     @commands.has_role(config.role_global_mod)
