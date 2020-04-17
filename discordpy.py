@@ -37,8 +37,6 @@ async def on_message(msg):
                                          msg.author, msg.content.replace('\n', '\n    ')))
     if msg.author.bot:
         return
-    if msg.author == bot.user:
-        return
     # Required to process commands
     await bot.process_commands(msg)
 
