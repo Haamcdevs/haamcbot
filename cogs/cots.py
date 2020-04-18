@@ -69,11 +69,11 @@ class Cots(commands.Cog):
             return fd.read()
 
     @commands.group(name='cots')
-    @commands.has_role(config.role_global_mod)
+    @commands.has_role(config.role['global_mod'])
     async def start(self, ctx, cmd, season: str, year: str):
         user = ctx.message.author
-        channel = next(ch for ch in user.guild.channels if ch.id == config.cots_channel)
-        role = next(r for r in user.guild.roles if r.id == config.role_user)
+        channel = next(ch for ch in user.guild.channels if ch.id == config.channel['cots'])
+        role = next(r for r in user.guild.roles if r.id == config.role['user'])
         season = f'{season} {year}'
         self.set_season(season)
         await channel.send(f"Bij deze zijn de nominaties voor season {season} geopend!")
@@ -81,7 +81,7 @@ class Cots(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        if message.author.bot or message.channel.id != config.cots_channel:
+        if message.author.bot or message.channel.id != config.channel['cots']:
             return
         nomination = CotsNomination(message.content, self.get_season())
         errors = nomination.validate()
