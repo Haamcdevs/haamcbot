@@ -3,16 +3,16 @@ import re
 import asyncio
 import operator
 from discord.ext import commands
-# import requests
-# from cachecontrol import CacheControlAdapter
-# from cachecontrol.heuristics import ExpiresAfter
+import requests
 from jikanpy import Jikan
+from jikanpy import APIException
+from cachecontrol import CacheControl
+from cachecontrol.heuristics import ExpiresAfter
+from cachecontrol.caches.file_cache import FileCache
 
-# adapter = CacheControlAdapter(heuristic=ExpiresAfter(days=1))
-# sess = requests.Session()
-# sess.mount('http://', adapter)
-# cached_jikan = Jikan("https://api.jikan.moe/v3/", session=sess)
-jikan = Jikan()
+expires = ExpiresAfter(days=1)
+session = CacheControl(requests.Session(), heuristic=expires, cache=FileCache(config.cache_dir))
+jikan = Jikan(session=session)
 
 
 class CotsNomination(object):
@@ -30,8 +30,12 @@ class CotsNomination(object):
         except TypeError:
             return False
 
-    def get_anime(self):
-        return jikan.anime(self.get_anime_id())
+    async def get_anime(self):
+        try:
+            return jikan.anime(self.get_anime_id())
+        except APIException:
+            await asyncio.sleep(0.5)
+            return self.get_anime()
 
     def get_character_id(self):
         try:
@@ -39,8 +43,12 @@ class CotsNomination(object):
         except TypeError:
             return False
 
-    def get_character(self):
-        return jikan.character(self.get_character_id())
+    async def get_character(self):
+        try:
+            return jikan.character(self.get_character_id())
+        except APIException:
+            await asyncio.sleep(0.5)
+            return self.get_character()
 
     @staticmethod
     def is_character_in_anime(character, anime):
@@ -49,7 +57,7 @@ class CotsNomination(object):
                 return True
         return False
 
-    def validate(self):
+    async def validate(self):
         errors = []
         if not self.get_anime_id():
             errors.append('Ongeldige anime link')
@@ -57,17 +65,17 @@ class CotsNomination(object):
             errors.append('Ongeldige character link')
         if len(errors) > 0:
             return errors
-        anime = self.get_anime()
-        character = self.get_character()
+        anime = await self.get_anime()
+        character = await self.get_character()
         if anime['premiered'] != self.season:
             errors.append(f"Anime is niet premiered in {self.season} maar in {anime['premiered']}")
         if not self.is_character_in_anime(character, anime):
             errors.append(f'Character komt niet voor in de anime')
         return errors
 
-    def __str__(self):
-        character = self.get_character()
-        anime = self.get_anime()
+    async def to_string(self):
+        character = await self.get_character()
+        anime = await self.get_anime()
         voice_actor = next(v for v in character['voice_actors'] if v['language'] == 'Japanese')
         return f":mens: **{character['name']}**, *{anime['title']}*" \
                f"\nvotes: **{self.votes}** | door: {self.message.author.name} | " \
@@ -120,7 +128,7 @@ class Cots(commands.Cog):
         if message.author.bot or message.channel.id != config.channel['cots']:
             return
         nomination = CotsNomination(message, self.get_season())
-        errors = nomination.validate()
+        errors = await nomination.validate()
         if len(errors):
             error_message = await message.channel.send("\n:x: " + "\n:x: ".join(errors))
             await asyncio.sleep(5)
@@ -133,11 +141,8 @@ class Cots(commands.Cog):
     async def ranking(self, ctx):
         nominations = await self.get_ranked_nominations(ctx)
         msg = []
-        i = 0
-        for n in nominations:
-            i = i + 1
-            msg.append(f"{i}) "+str(n))
-            await asyncio.sleep(0.3)
+        for i, n in enumerate(nominations):
+            msg.append(f"{i + 1}) " + await n.to_string())
         await ctx.message.channel.send("\n".join(msg))
 
 
