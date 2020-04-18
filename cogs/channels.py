@@ -57,12 +57,15 @@ class Channels(commands.Cog):
         categorychannel = next(chan for chan in guild.channels if chan.id == config.channel['join-anime'])
         await self._joinmessage(newchan, categorychannel, maldata)
         await ctx.message.delete()
-        await newchan.send(f"Hallo iedereen! In deze channel kijken we naar **{title}**.\n{maldata['url']}")
+        welcomemsg = f"Hallo iedereen! In deze channel kijken we naar **{maldata['title']}**.\nMAL: {maldata['url']}"
         if trailer := maldata['trailer_url']:
             if 'embed' in trailer:
                 trailer = f"https://www.youtube.com/watch?v={re.search('/embed/([^?]+)', trailer)[1]}"
-            await newchan.send(trailer)
-        await newchan.send(f"m.airing notify channel {maldata['title']}")
+            welcomemsg += f'\nTrailer: {trailer}'
+        welcomemsg += f"\nMirai: `m.airing notify channel {maldata['title']}`"
+        msg = await newchan.send(welcomemsg)
+        await msg.pin()
+
 
 
 def setup(bot):
