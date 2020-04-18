@@ -6,7 +6,7 @@ from discord.ext import commands
 from discord.member import Member
 
 @commands.command()
-async def channelexport(ctx, channelId: int): 
+async def userexport(ctx, channelId: int): 
     channel = getchannel(ctx, channelId)         
     if channel is not None:
          await sendreadusersforchannel(ctx, channel)
