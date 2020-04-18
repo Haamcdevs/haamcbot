@@ -7,8 +7,8 @@ Core Requires:
 2. discord.py   ( https://pypi.org/project/discord.py/ )
 
 Plugin Requires:
-1. jikanpy - Myanimelist unoficcial api client ( https://pypi.org/project/jikanpy/) 
-
+1. jikanpy - Myanimelist unoficcial api client ( https://pypi.org/project/jikanpy/)
+2. CacheControl - cache the requests 
 
 Stepts to get it to work:
 1) Copy config.py.example and rename it to config.py

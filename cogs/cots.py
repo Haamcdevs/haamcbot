@@ -1,9 +1,17 @@
 import config
 import re
 import asyncio
+import requests
+import operator
 from discord.ext import commands
+from cachecontrol import CacheControlAdapter
+from cachecontrol.heuristics import ExpiresAfter
 from jikanpy import Jikan
 
+adapter = CacheControlAdapter(heuristic=ExpiresAfter(days=1))
+sess = requests.Session()
+sess.mount('http://', adapter)
+cached_jikan = Jikan("https://api.jikan.moe/v3/", session=sess)
 jikan = Jikan()
 
 
@@ -11,24 +19,30 @@ class CotsNomination(object):
     def __init__(self, message, season):
         self.message = message
         self.season = season
+        try:
+            self.votes = message.reactions[0].count - 1
+        except IndexError:
+            self.votes = 0
 
     def get_anime_id(self):
         try:
-            return int(re.search('anime/(\d+)' ,self.message)[1])
+            return int(re.search('anime/(\d+)', self.message.content)[1])
         except TypeError:
             return False
 
     def get_anime(self):
-        return jikan.anime(self.get_anime_id())
+        print(f"get anime {self.get_anime_id()}")
+        return cached_jikan.anime(self.get_anime_id())
 
     def get_character_id(self):
         try:
-            return int(re.search('character/(\d+)' ,self.message)[1])
+            return int(re.search('character/(\d+)', self.message.content)[1])
         except TypeError:
             return False
 
     def get_character(self):
-        return jikan.character(self.get_character_id())
+        print(f"get character {self.get_character_id()}")
+        return cached_jikan.character(self.get_character_id())
 
     @staticmethod
     def is_character_in_anime(character, anime):
@@ -53,6 +67,11 @@ class CotsNomination(object):
             errors.append(f'Character komt niet voor in de anime')
         return errors
 
+    def __str__(self):
+        character = self.get_character()
+        anime = self.get_anime()
+        return f"*{character['name']}*, {anime['title']}"
+
 
 class Cots(commands.Cog):
     def __init__(self, bot):
@@ -68,9 +87,25 @@ class Cots(commands.Cog):
         with open('./var/cots_season', 'r') as fd:
             return fd.read()
 
-    @commands.group(name='cots')
+    @commands.group(name='cots', invoke_without_command=True)
+    async def cots(self):
+        return
+
+    async def get_ranked_nominations(self, ctx):
+        user = ctx.message.author
+        channel = next(ch for ch in user.guild.channels if ch.id == config.cots_channel)
+        messages = await channel.history(limit=10).flatten()
+        nominations = []
+        for msg in messages:
+            if msg.author.bot:
+                break
+            nominations.append(CotsNomination(msg, self.get_season()))
+        nominations.sort(key=operator.attrgetter('votes'), reverse=True)
+        return nominations
+
+    @cots.command()
     @commands.has_role(config.role_global_mod)
-    async def start(self, ctx, cmd, season: str, year: str):
+    async def start(self, ctx, season: str, year: str):
         user = ctx.message.author
         channel = next(ch for ch in user.guild.channels if ch.id == config.cots_channel)
         role = next(r for r in user.guild.roles if r.id == config.role_user)
@@ -83,7 +118,7 @@ class Cots(commands.Cog):
     async def on_message(self, message):
         if message.author.bot or message.channel.id != config.cots_channel:
             return
-        nomination = CotsNomination(message.content, self.get_season())
+        nomination = CotsNomination(message, self.get_season())
         errors = nomination.validate()
         if len(errors):
             error_message = await message.channel.send("\n:x: " + "\n:x: ".join(errors))
@@ -92,6 +127,17 @@ class Cots(commands.Cog):
             await error_message.delete()
             return
         await message.add_reaction('🔼')
+
+    @cots.command()
+    async def ranking(self, ctx):
+        nominations = await self.get_ranked_nominations(ctx)
+        msg = []
+        i = 0
+        for n in nominations:
+            i = i + 1
+            msg.append("{i}) "+str(n))
+            break
+        ctx.message.channel.send("\n".join(msg))
 
 
 def setup(bot):
