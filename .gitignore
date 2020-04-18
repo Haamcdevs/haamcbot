@@ -5,6 +5,7 @@ config.py
 /logs/
 /var/
 !/var/.gitignore
+!/var/cache
 
 # Visual Studio Code related ignores
 .vscode/*

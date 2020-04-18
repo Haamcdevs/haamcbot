@@ -18,16 +18,6 @@ async def on_ready():
 async def load(ctx, extension):
     bot.load_extension(f'cogs.{extension}')
 
-@bot.command()
-async def unload(ctx, extension):
-    bot.unload_extension(f'cogs.{extension}')
-
-
-@bot.command()
-async def loadcog(ctx, cog: str):
-    """Loads a cog from the cogs folder"""
-    pass
-
 
 @bot.event
 async def on_message(msg):
