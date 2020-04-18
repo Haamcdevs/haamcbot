@@ -34,5 +34,6 @@ async def sendreadusersforchannel(ctx, channel):
         await ctx.send(f'Je hebt er jaren op moeten wachten, maar eindelijk heb ik een mooi lijste voor je xoxo {ctx.author.mention}',file=File(binary,f"{channel.name}.csv"))
     else:
         await ctx.send(f'Sorry schatje, maar ik heb niets kunnen vinden, kom je vanavond wel nog eten? {ctx.author.mention}')
+
 def setup(bot):
-    bot.add_command(channelexport)
+    bot.add_command(userexport)
