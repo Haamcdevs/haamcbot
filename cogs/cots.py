@@ -154,6 +154,29 @@ class Cots(commands.Cog):
             msg.append(f"{i + 1}) " + await n.to_string())
         await ctx.message.channel.send("\n".join(msg))
 
+    @cots.command()
+    async def finish(self, ctx):
+        nominations = await self.get_ranked_nominations(ctx)
+        if len(nominations) < 2:
+            return await ctx.message.channel.send(':x: Niet genoeg nominations')
+        if nominations[0].votes == nominations[1].votes:
+            return await ctx.message.channel.send(':x: Het is een gelijke stand')
+        winner = nominations[0]
+        user = ctx.message.author
+        channel = next(ch for ch in user.guild.channels if ch.id == config.channel['cots'])
+        role = next(r for r in user.guild.roles if r.id == config.role['user'])
+        msg = []
+        for i, n in enumerate(nominations):
+            msg.append(f"{i + 1}) " + await n.to_string())
+        await channel.send("\n".join(msg))
+        character = await winner.get_character()
+        anime = await winner.get_anime()
+        msg = f":trophy: Het character van {self.get_season()} is **{character['name']}**! van {anime['title']}\n" \
+              f"Genomineerd door {winner.message.author.name}\n" \
+              f"{character['url']}"
+        await channel.send(msg)
+        await channel.set_permissions(role, send_messages=False, reason=f'Finishing cots, triggered by {user.name}')
+
 
 def setup(bot):
     bot.add_cog(Cots(bot))
