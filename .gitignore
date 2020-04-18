@@ -3,3 +3,5 @@ __pycache__/
 config.py
 /env/
 /logs/
+/var/
+!/var/.gitignore

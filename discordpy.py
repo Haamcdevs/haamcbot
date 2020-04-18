@@ -35,6 +35,8 @@ async def on_message(msg):
     with open('logs/{}/{}_{}.log'.format(msg.guild, msg.channel, time.strftime('%Y-%m-%d')), 'a') as log:
         log.write('{}  <{}> {}\n'.format(time.strftime('%Y-%m-%dT%H:%M:%S'),
                                          msg.author, msg.content.replace('\n', '\n    ')))
+    if msg.author.bot:
+        return
     # Required to process commands
     await bot.process_commands(msg)
 
