@@ -33,9 +33,11 @@ class CotsNomination(object):
     async def get_anime(self):
         try:
             return jikan.anime(self.get_anime_id())
-        except APIException:
+        except APIException as e:
+            if '429' not in str(e):
+                raise e
             await asyncio.sleep(0.5)
-            return self.get_anime()
+            return await self.get_anime()
 
     def get_character_id(self):
         try:
@@ -46,9 +48,11 @@ class CotsNomination(object):
     async def get_character(self):
         try:
             return jikan.character(self.get_character_id())
-        except APIException:
+        except APIException as e:
+            if '429' not in str(e):
+                raise e
             await asyncio.sleep(0.5)
-            return self.get_character()
+            return await self.get_character()
 
     @staticmethod
     def is_character_in_anime(character, anime):
@@ -127,8 +131,12 @@ class Cots(commands.Cog):
     async def on_message(self, message):
         if message.author.bot or message.channel.id != config.channel['cots']:
             return
-        nomination = CotsNomination(message, self.get_season())
-        errors = await nomination.validate()
+        try:
+            nomination = CotsNomination(message, self.get_season())
+            errors = await nomination.validate()
+        except APIException as e:
+            print(e)
+            return await message.delete()
         if len(errors):
             error_message = await message.channel.send("\n:x: " + "\n:x: ".join(errors))
             await asyncio.sleep(5)
