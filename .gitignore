@@ -2,3 +2,6 @@ __pycache__/
 .idea
 config.py
 /env/
+/logs/
+/var/
+!/var/.gitignore

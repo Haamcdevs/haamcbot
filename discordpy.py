@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import os
 import config
 from discord.ext import commands
 import time
@@ -14,14 +15,12 @@ async def on_ready():
 
 # Extensions are python modulkes that contain various commands, cogs or listeners
 @bot.command()
-async def load(ctx, name: str):
-    """Loads an extension from the extension folder"""
-    try:
-        if ctx.author in config.owners:
-            bot.load_extension(f'extensions.{name}')
-            await ctx.send(f'Loaded Extension {name}')
-    except Exception as E:
-        ctx.send(f'Extension {name} failed: {E}')
+async def load(ctx, extension):
+    bot.load_extension(f'cogs.{extension}')
+
+@bot.command()
+async def unload(ctx, extension):
+    bot.unload_extension(f'cogs.{extension}')
 
 
 @bot.command()
@@ -36,13 +35,19 @@ async def on_message(msg):
     with open('logs/{}/{}_{}.log'.format(msg.guild, msg.channel, time.strftime('%Y-%m-%d')), 'a') as log:
         log.write('{}  <{}> {}\n'.format(time.strftime('%Y-%m-%dT%H:%M:%S'),
                                          msg.author, msg.content.replace('\n', '\n    ')))
+    if msg.author.bot:
+        return
     # Required to process commands
     await bot.process_commands(msg)
 
 
 if __name__ == '__main__':
-    for extension in config.extensions:
-        bot.load_extension(f"extensions.{extension}")
-    for cog in config.cogs:
-        bot.load_extension(f"cogs.{cog}")
+    for filename in os.listdir('./cogs'):
+        if filename.endswith('.py'):
+            bot.load_extension(f'cogs.{filename[:-3]}')
+            print(f'Loaded cogs.{filename[:-3]}')
+    for filename in os.listdir('./extensions'):
+        if filename.endswith('.py'):
+            bot.load_extension(f'extensions.{filename[:-3]}')
+            print(f'Loaded extensions.{filename[:-3]}')
     bot.run(config.authkey)
