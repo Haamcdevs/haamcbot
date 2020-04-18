@@ -58,8 +58,10 @@ class Channels(commands.Cog):
         await self._joinmessage(newchan, categorychannel, maldata)
         await ctx.message.delete()
         await newchan.send(f"Hallo iedereen! In deze channel kijken we naar **{title}**.\n{maldata['url']}")
-        if maldata['trailer_url']:
-            await newchan.send(f"{maldata['trailer_url']}")
+        if trailer := maldata['trailer_url']:
+            if 'embed' in trailer:
+                trailer = f"https://www.youtube.com/watch?v={re.search('/embed/([^?]+)', trailer)[1]}"
+            await newchan.send(trailer)
         await newchan.send(f"m.airing notify channel {maldata['title']}")
 
 
