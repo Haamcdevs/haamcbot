@@ -1,5 +1,6 @@
 import discord
 import re
+import config
 from discord.ext import commands
 from jikanpy import Jikan
 
@@ -19,31 +20,30 @@ class Channels(commands.Cog):
 
     @staticmethod
     async def _joinmessage(channel, categorychannel, maldata):
+        # Maybe rewrite so its not limited to anime?
         embed = discord.Embed(
-            title=maldata['title'],
             type='rich',
-            url=maldata['url']
         )
-        # embed.set_author(name=maldata['title'], icon_url='', url=malurl)
+        embed.set_author(name=maldata['title'], icon_url='https://i.imgur.com/pcdrHvS.png', url=maldata['url'])
         embed.set_footer(text='Druk op de reactions om te joinen / leaven')
         embed.set_thumbnail(url=maldata['image_url'])
         embed.add_field(name='studio', value=', '.join([stu['name'] for stu in maldata['studios']]))
         embed.add_field(name='datum', value=maldata['aired']['string'])
-        embed.add_field(name='genres', value=', '.join([gen['name'] for gen in maldata['genres']]))
+        embed.add_field(name='genres'.ljust(122) + "ᅠ",
+                        value=', '.join([gen['name'] for gen in maldata['genres']]),
+                        inline=False)
         embed.add_field(name='channel', value=channel.mention)
-        embed.add_field(name='kijkers', value=len(channel.members)-1)
+        # When created, value is 0. Amount increased when someone joins/leaves.
+        embed.add_field(name='kijkers', value=0)
         msg = await categorychannel.send(embed=embed)
         await msg.add_reaction('▶')
         await msg.add_reaction('⏹')
 
     @commands.command(pass_context=True)
-    @commands.has_any_role("Shinsengumi", "Shinobi", "Anime Mod")
+    @commands.has_any_role(config.role['global_mod'], config.role['anime_mod'])
     async def animechannel(self, ctx, title, malurl):
         guild = ctx.message.guild
-        category = None
-        for cat in guild.categories:
-            if cat.name == 'Anime':
-                category = cat
+        category = next(cat for cat in guild.categories if cat.id == config.category['anime'])
         # Get maldata here because we need it for the title
         maldata = Channels._getmaldata(malurl)
         newchan = await guild.create_text_channel(
@@ -52,19 +52,15 @@ class Channels(commands.Cog):
             topic=f"{maldata['title']} || {maldata['url']}",
             position=len(category.channels),
             reason=f"Aangevraagd door {ctx.author}",
-            overwrites={
-                guild.default_role: discord.PermissionOverwrite(read_messages=False),
-                guild.me: discord.PermissionOverwrite(read_messages=True)
-            }
+            overwrites=category.overwrites
         )
-        for cat in guild.categories:
-            if 'joinable-channels' in cat.name:
-                for chan in cat.channels:
-                    if 'anime' in chan.name:
-                        categorychannel = chan
+        categorychannel = next(chan for chan in guild.channels if chan.id == config.channel['join-anime'])
         await self._joinmessage(newchan, categorychannel, maldata)
         await ctx.message.delete()
-        await newchan.send(f"Hallo iedereen! In deze channel kijken we naar **{title}**.\n{malurl}")
+        await newchan.send(f"Hallo iedereen! In deze channel kijken we naar **{title}**.\n{maldata['url']}")
+        if maldata['trailer_url']:
+            await newchan.send(f"{maldata['trailer_url']}")
+        await newchan.send(f"m.airing notify channel {maldata['title']}")
 
 
 def setup(bot):
