@@ -131,12 +131,13 @@ class Cots(commands.Cog):
     async def on_message(self, message):
         if message.author.bot or message.channel.id != config.channel['cots']:
             return
+        errors = []
         try:
             nomination = CotsNomination(message, self.get_season())
             errors = await nomination.validate()
         except APIException as e:
             print(e)
-            return await message.delete()
+            errors.append('Er ging iets fout bij het ophalen van de anime of het character')
         if len(errors):
             error_message = await message.channel.send("\n:x: " + "\n:x: ".join(errors))
             await asyncio.sleep(5)
