@@ -69,8 +69,8 @@ class CotsNomination(object):
         character = self.get_character()
         anime = self.get_anime()
         voice_actor = next(v for v in character['voice_actors'] if v['language'] == 'Japanese')
-        return f"**{character['name']}**, *{anime['title']}*" \
-               f"\nvotes: **{self.votes}** | door: {self.message.author} | " \
+        return f":mens: **{character['name']}**, *{anime['title']}*" \
+               f"\nvotes: **{self.votes}** | door: {self.message.author.name} | " \
                f"voice actor: {voice_actor['name']} | score {anime['score']}"
 
 
