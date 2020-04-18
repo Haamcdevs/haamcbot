@@ -1,17 +1,17 @@
 import config
 import re
 import asyncio
-import requests
 import operator
 from discord.ext import commands
-from cachecontrol import CacheControlAdapter
-from cachecontrol.heuristics import ExpiresAfter
+# import requests
+# from cachecontrol import CacheControlAdapter
+# from cachecontrol.heuristics import ExpiresAfter
 from jikanpy import Jikan
 
-adapter = CacheControlAdapter(heuristic=ExpiresAfter(days=1))
-sess = requests.Session()
-sess.mount('http://', adapter)
-cached_jikan = Jikan("https://api.jikan.moe/v3/", session=sess)
+# adapter = CacheControlAdapter(heuristic=ExpiresAfter(days=1))
+# sess = requests.Session()
+# sess.mount('http://', adapter)
+# cached_jikan = Jikan("https://api.jikan.moe/v3/", session=sess)
 jikan = Jikan()
 
 
@@ -31,8 +31,7 @@ class CotsNomination(object):
             return False
 
     def get_anime(self):
-        print(f"get anime {self.get_anime_id()}")
-        return cached_jikan.anime(self.get_anime_id())
+        return jikan.anime(self.get_anime_id())
 
     def get_character_id(self):
         try:
@@ -41,8 +40,7 @@ class CotsNomination(object):
             return False
 
     def get_character(self):
-        print(f"get character {self.get_character_id()}")
-        return cached_jikan.character(self.get_character_id())
+        return jikan.character(self.get_character_id())
 
     @staticmethod
     def is_character_in_anime(character, anime):
@@ -70,7 +68,10 @@ class CotsNomination(object):
     def __str__(self):
         character = self.get_character()
         anime = self.get_anime()
-        return f"*{character['name']}*, {anime['title']}"
+        voice_actor = next(v for v in character['voice_actors'] if v['language'] == 'Japanese')
+        return f"**{character['name']}**, *{anime['title']}*" \
+               f"\nvotes: **{self.votes}** | door: {self.message.author} | " \
+               f"voice actor: {voice_actor['name']} | score {anime['score']}"
 
 
 class Cots(commands.Cog):
@@ -93,7 +94,7 @@ class Cots(commands.Cog):
 
     async def get_ranked_nominations(self, ctx):
         user = ctx.message.author
-        channel = next(ch for ch in user.guild.channels if ch.id == config.cots_channel)
+        channel = next(ch for ch in user.guild.channels if ch.id == config.channel['cots'])
         messages = await channel.history(limit=10).flatten()
         nominations = []
         for msg in messages:
@@ -136,7 +137,7 @@ class Cots(commands.Cog):
         for n in nominations:
             i = i + 1
             msg.append(f"{i}) "+str(n))
-            break
+            await asyncio.sleep(0.3)
         await ctx.message.channel.send("\n".join(msg))
 
 
