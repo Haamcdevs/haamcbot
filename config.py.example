@@ -1,6 +1,7 @@
 authkey = 'Put Discord Build-a-bot token here'
 commandchar = '!'         # The character(s) that should prepend a command
 owners = ["XSlicer#6364", "ih16#0001", "Sandshark#1101", "Oxidda#1397"] # List of owners
+cache_dir = '/tmp'
 
 role = {
     'global_mod': 557266057950134284,
