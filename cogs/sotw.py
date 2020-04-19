@@ -2,6 +2,9 @@ import config
 from discord.ext import commands
 import datetime
 
+import config # Config framework
+from discord.ext import commands # Discord framework
+import datetime # Used to determine weeknumber
 
 class SotwNomination(object):
 
@@ -34,11 +37,11 @@ class Sotw(commands.Cog):
     # async def fromMessage()
 
     @commands.group(name='sotw')
-    @commands.has_role(config.role_global_mod)
+    @commands.has_role(config.role['global_mod'])
     async def next(self, ctx, cmd):
         user = ctx.message.author
-        channel = next(ch for ch in user.guild.channels if ch.id == config.sotw_channel)
-        role = next(r for r in user.guild.roles if r.id == config.role_user)
+        channel = next(ch for ch in user.guild.channels if ch.id == config.channel['sotw'])
+        role = next(r for r in user.guild.roles if r.id == config.role['user'])
         
         # Disable writes to the SOTW channel so we can declare a winner in a sane way
         await channel.set_permissions(role, send_messages=False, reason=f'Stopping sotw, triggered by {user.name}')
