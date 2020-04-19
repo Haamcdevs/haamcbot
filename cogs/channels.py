@@ -1,14 +1,20 @@
 import discord
 import re
 import config
+import requests
 from discord.ext import commands
 from discord.member import Member
 from jikanpy import Jikan
+from cachecontrol import CacheControl
+from cachecontrol.heuristics import ExpiresAfter
+from cachecontrol.caches.file_cache import FileCache
 
-jikan = Jikan()
+expires = ExpiresAfter(days=1)
+session = CacheControl(requests.Session(), heuristic=expires, cache=FileCache(config.cache_dir))
+jikan = Jikan(session=session)
 
 
-class JoinableMessage():
+class JoinableMessage:
     def __init__(self, message, bot):
         self.message = message
         self.bot = bot
@@ -49,10 +55,57 @@ class JoinableMessage():
                 return True
         return False
 
+    async def get_member_count(self):
+        channel = await self.get_channel()
+        members = []
+        for ow in channel.overwrites.items():
+            if type(ow[0]) is not Member:
+                continue
+            # Already in the channel
+            if ow[1].read_messages is True:
+                members.append(ow)
+        return len(members)
+
     async def add_user(self, user):
         channel = await self.get_channel()
         await channel.set_permissions(user, read_messages=True, reason=f"User joined trough joinable channel")
         await channel.send(f":inbox_tray: {user.mention} joined")
+        await self.updateMembers()
+
+    @staticmethod
+    def create_anime_embed(channel, anime, members):
+        embed = discord.Embed(type='rich')
+        embed.set_author(name=anime['title'], icon_url='https://i.imgur.com/pcdrHvS.png', url=anime['url'])
+        embed.set_footer(text='Druk op de reactions om te joinen / leaven')
+        embed.set_thumbnail(url=anime['image_url'])
+        embed.add_field(name='studio', value=', '.join([stu['name'] for stu in anime['studios']]))
+        embed.add_field(name='datum', value=anime['aired']['string'])
+        embed.add_field(name='genres'.ljust(122) + "ᅠ",
+                        value=', '.join([gen['name'] for gen in anime['genres']]),
+                        inline=False)
+        embed.add_field(name='channel', value=channel.mention)
+        # When created, value is 0. Amount increased when someone joins/leaves.
+        embed.add_field(name='kijkers', value=str(members))
+        return embed
+
+    @staticmethod
+    def get_anime_from_url(url):
+        try:
+            mal_id = re.search(r'\d+', url)
+            return jikan.anime(int(mal_id[0]))
+        except IndexError:
+            return None
+
+    def get_anime(self):
+        return self.get_anime_from_url(self.message.embeds[0].author.url)
+
+    async def updateMembers(self):
+        member_count = await self.get_member_count()
+        channel = await self.get_channel()
+        anime = self.get_anime()
+        if anime is not None:
+            embed = self.create_anime_embed(channel, anime, member_count)
+            await self.message.edit(embed=embed)
 
 
 class Channels(commands.Cog):
@@ -60,29 +113,8 @@ class Channels(commands.Cog):
         self.bot = bot
 
     @staticmethod
-    def _getmaldata(url):
-        # Using regex to get MAL id out of URL (easier to use with Jikan)
-        mal_id = re.search('\d+', url)
-        anime = jikan.anime(mal_id[0])
-        return anime
-
-    @staticmethod
     async def _joinmessage(channel, categorychannel, maldata):
-        # Maybe rewrite so its not limited to anime?
-        embed = discord.Embed(
-            type='rich',
-        )
-        embed.set_author(name=maldata['title'], icon_url='https://i.imgur.com/pcdrHvS.png', url=maldata['url'])
-        embed.set_footer(text='Druk op de reactions om te joinen / leaven')
-        embed.set_thumbnail(url=maldata['image_url'])
-        embed.add_field(name='studio', value=', '.join([stu['name'] for stu in maldata['studios']]))
-        embed.add_field(name='datum', value=maldata['aired']['string'])
-        embed.add_field(name='genres'.ljust(122) + "ᅠ",
-                        value=', '.join([gen['name'] for gen in maldata['genres']]),
-                        inline=False)
-        embed.add_field(name='channel', value=channel.mention)
-        # When created, value is 0. Amount increased when someone joins/leaves.
-        embed.add_field(name='kijkers', value=0)
+        embed = JoinableMessage.create_anime_embed(channel, maldata, 0)
         msg = await categorychannel.send(embed=embed)
         await msg.add_reaction('▶')
         await msg.add_reaction('⏹')
@@ -93,7 +125,7 @@ class Channels(commands.Cog):
         guild = ctx.message.guild
         category = next(cat for cat in guild.categories if cat.id == config.category['anime'])
         # Get maldata here because we need it for the title
-        maldata = Channels._getmaldata(malurl)
+        maldata = JoinableMessage.get_anime_from_url(malurl)
         newchan = await guild.create_text_channel(
             name=title,
             category=category,
