@@ -1,7 +1,7 @@
-import discord
 import re
 import config
 import requests
+import discord
 from discord.ext import commands
 from discord.member import Member
 from jikanpy import Jikan
@@ -15,7 +15,7 @@ jikan = Jikan(session=session)
 
 
 class JoinableMessage:
-    def __init__(self, message, bot):
+    def __init__(self, message: discord.message, bot):
         self.message = message
         self.bot = bot
 
@@ -37,44 +37,43 @@ class JoinableMessage:
     def get_channel_id(self):
         return re.search(r'\d+', self.get_field('channel').value)[0]
 
-    async def get_channel(self):
+    async def get_channel(self) -> discord.channel:
         return await self.bot.fetch_channel(self.get_channel_id())
 
-    async def is_joined(self, user):
+    async def is_joined(self, user: discord.user):
         channel = await self.get_channel()
-        return len(list(filter(
-            lambda o: type(o[0]) is Member and o[0].id == user.id and o[1].read_messages is True,
-            channel.overwrites.items()
-        ))) == 1
+        return bool([
+            o for o in channel.overwrites.items() if
+            type(o[0]) is Member and o[0].id == user.id and o[1].read_messages is True
+        ])
 
-    async def is_banned(self, user):
+    async def is_banned(self, user: discord.user):
         channel = await self.get_channel()
-        return len(list(filter(
-            lambda o: type(o[0]) is Member and o[0].id == user.id and o[1].read_messages is False,
-            channel.overwrites.items()
-        ))) == 1
+        return bool([
+            o for o in channel.overwrites.items() if
+            type(o[0]) is Member and o[0].id == user.id and o[1].read_messages is False
+        ])
 
     async def get_member_count(self):
         channel = await self.get_channel()
-        return len(list(filter(
-            lambda o: type(o[0]) is Member and o[1].read_messages is True,
-            channel.overwrites.items()
-        )))
+        return len([
+            o for o in channel.overwrites.items() if type(o[0]) is Member and o[1].read_messages is True
+        ])
 
-    async def add_user(self, user):
+    async def add_user(self, user: discord.user):
         channel = await self.get_channel()
         await channel.set_permissions(user, read_messages=True, reason=f"User joined trough joinable channel")
         await channel.send(f":inbox_tray: {user.mention} joined")
         await self.update_members()
 
-    async def remove_user(self, user):
+    async def remove_user(self, user: discord.user):
         channel = await self.get_channel()
         await channel.set_permissions(user, overwrite=None, reason=f"User left trough joinable channel")
         await channel.send(f":outbox_tray: {user.mention} left")
         await self.update_members()
 
     @staticmethod
-    def create_anime_embed(channel, anime, members):
+    def create_anime_embed(channel: discord.TextChannel, anime, members):
         embed = discord.Embed(type='rich')
         embed.set_author(name=anime['title'], icon_url='https://i.imgur.com/pcdrHvS.png', url=anime['url'])
         embed.set_footer(text='Druk op de reactions om te joinen / leaven')
@@ -111,6 +110,7 @@ class JoinableMessage:
 class Channels(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.allowed_roles = [config.role['global_mod'], config.role['anime_mod']]
 
     @staticmethod
     async def _joinmessage(channel, categorychannel, maldata):
@@ -124,7 +124,6 @@ class Channels(commands.Cog):
     async def animechannel(self, ctx, title, malurl):
         guild = ctx.message.guild
         category = next(cat for cat in guild.categories if cat.id == config.category['anime'])
-        # Get maldata here because we need it for the title
         maldata = JoinableMessage.get_anime_from_url(malurl)
         newchan = await guild.create_text_channel(
             name=title,
@@ -178,10 +177,7 @@ class Channels(commands.Cog):
 
     @commands.Cog.listener(name='on_raw_reaction_add')
     async def refresh(self, payload):
-        if payload.emoji.name != '🔁':
-            return
-        allowed = [config.role['global_mod'], config.role['anime_mod']]
-        if len(list(filter(lambda role: role.id in allowed, payload.member.roles))) == 0:
+        if payload.emoji.name != '🔁' or not bool([r for r in payload.member.roles if r.id in self.allowed_roles]):
             return
         user = await self.bot.fetch_user(payload.user_id)
         channel = await self.bot.fetch_channel(payload.channel_id)
@@ -194,10 +190,7 @@ class Channels(commands.Cog):
 
     @commands.Cog.listener(name='on_raw_reaction_add')
     async def delete(self, payload):
-        if payload.emoji.name != '🚮':
-            return
-        allowed = [config.role['global_mod'], config.role['anime_mod']]
-        if len(list(filter(lambda role: role.id in allowed, payload.member.roles))) == 0:
+        if payload.emoji.name != '🚮' or not bool([r for r in payload.member.roles if r.id in self.allowed_roles]):
             return
         channel = await self.bot.fetch_channel(payload.channel_id)
         msg = await channel.fetch_message(payload.message_id)
