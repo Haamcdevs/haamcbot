@@ -42,38 +42,24 @@ class JoinableMessage:
 
     async def is_joined(self, user):
         channel = await self.get_channel()
-        for ow in channel.overwrites.items():
-            if type(ow[0]) is not Member:
-                continue
-            if ow[0].id != user.id:
-                continue
-            # Already in the channel
-            if ow[1].read_messages is True:
-                return True
-        return False
+        return len(list(filter(
+            lambda o: type(o[0]) is Member and o[0].id == user.id and o[1].read_messages is True,
+            channel.overwrites.items()
+        ))) == 1
 
     async def is_banned(self, user):
         channel = await self.get_channel()
-        for ow in channel.overwrites.items():
-            if type(ow[0]) is not Member:
-                continue
-            if ow[0].id != user.id:
-                continue
-            # Banned
-            if ow[1].read_messages is False:
-                return True
-        return False
+        return len(list(filter(
+            lambda o: type(o[0]) is Member and o[0].id == user.id and o[1].read_messages is False,
+            channel.overwrites.items()
+        ))) == 1
 
     async def get_member_count(self):
         channel = await self.get_channel()
-        members = []
-        for ow in channel.overwrites.items():
-            if type(ow[0]) is not Member:
-                continue
-            # Already in the channel
-            if ow[1].read_messages is True:
-                members.append(ow)
-        return len(members)
+        return len(list(filter(
+            lambda o: type(o[0]) is Member and o[1].read_messages is True,
+            channel.overwrites.items()
+        )))
 
     async def add_user(self, user):
         channel = await self.get_channel()
@@ -99,7 +85,6 @@ class JoinableMessage:
                         value=', '.join([gen['name'] for gen in anime['genres']]),
                         inline=False)
         embed.add_field(name='channel', value=channel.mention)
-        # When created, value is 0. Amount increased when someone joins/leaves.
         embed.add_field(name='kijkers', value=str(members))
         return embed
 
@@ -163,7 +148,7 @@ class Channels(commands.Cog):
 
     @commands.Cog.listener(name='on_raw_reaction_add')
     async def join(self, payload):
-        if payload.emoji.name != '▶':
+        if payload.emoji.name != '▶' or payload.member.bot:
             return
         channel = await self.bot.fetch_channel(payload.channel_id)
         msg = await channel.fetch_message(payload.message_id)
@@ -178,7 +163,7 @@ class Channels(commands.Cog):
 
     @commands.Cog.listener(name='on_raw_reaction_add')
     async def leave(self, payload):
-        if payload.emoji.name != '⏹':
+        if payload.emoji.name != '⏹' or payload.member.bot:
             return
         channel = await self.bot.fetch_channel(payload.channel_id)
         msg = await channel.fetch_message(payload.message_id)
