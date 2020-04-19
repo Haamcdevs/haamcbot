@@ -191,6 +191,38 @@ class Channels(commands.Cog):
             return
         await message.remove_user(user)
 
+    @commands.Cog.listener(name='on_raw_reaction_add')
+    async def refresh(self, payload):
+        if payload.emoji.name != '🔁':
+            return
+        allowed = [config.role['global_mod'], config.role['anime_mod']]
+        if len(list(filter(lambda role: role.id in allowed, payload.member.roles))) == 0:
+            return
+        user = await self.bot.fetch_user(payload.user_id)
+        channel = await self.bot.fetch_channel(payload.channel_id)
+        msg = await channel.fetch_message(payload.message_id)
+        message = JoinableMessage(msg, self.bot)
+        if message.is_joinable() is False:
+            return
+        await next(r for r in msg.reactions if r.emoji == '🔁').remove(user)
+        await message.update_members()
+
+    @commands.Cog.listener(name='on_raw_reaction_add')
+    async def delete(self, payload):
+        if payload.emoji.name != '🚮':
+            return
+        allowed = [config.role['global_mod'], config.role['anime_mod']]
+        if len(list(filter(lambda role: role.id in allowed, payload.member.roles))) == 0:
+            return
+        channel = await self.bot.fetch_channel(payload.channel_id)
+        msg = await channel.fetch_message(payload.message_id)
+        message = JoinableMessage(msg, self.bot)
+        if message.is_joinable() is False:
+            return
+        joinable_channel = await message.get_channel()
+        await joinable_channel.delete()
+        await msg.delete()
+
 
 def setup(bot):
     bot.add_cog(Channels(bot))
