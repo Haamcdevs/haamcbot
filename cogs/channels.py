@@ -2,9 +2,57 @@ import discord
 import re
 import config
 from discord.ext import commands
+from discord.member import Member
 from jikanpy import Jikan
 
 jikan = Jikan()
+
+
+class JoinableMessage():
+    def __init__(self, message, bot):
+        self.message = message
+        self.bot = bot
+
+    def is_joinable(self):
+        if self.message.author.id != self.bot.user.id:
+            return False
+        if len(self.message.embeds) == 0:
+            return False
+        if self.get_field('channel') is None:
+            return False
+        return True
+
+    def get_field(self, name):
+        try:
+            return next(field for field in self.message.embeds[0].fields if field.name == name)
+        except StopIteration:
+            return None
+
+    def get_channel_id(self):
+        return re.search(r'\d+', self.get_field('channel').value)[0]
+
+    async def get_channel(self):
+        return await self.bot.fetch_channel(self.get_channel_id())
+
+    async def is_joined(self, user):
+        channel = await self.get_channel()
+        for ow in channel.overwrites.items():
+            if type(ow[0]) is not Member:
+                continue
+            if ow[0].id != user.id:
+                continue
+            # Already in the channel
+            if ow[1].read_messages is True:
+                return True
+            # Banned
+            if ow[1].read_messages is False:
+                return True
+        return False
+
+    async def add_user(self, user):
+        channel = await self.get_channel()
+        await channel.set_permissions(user, read_messages=True, reason=f"User joined trough joinable channel")
+        await channel.send(f":inbox_tray: {user.mention} joined")
 
 
 class Channels(commands.Cog):
@@ -66,6 +114,20 @@ class Channels(commands.Cog):
         msg = await newchan.send(welcomemsg)
         await msg.pin()
 
+    @commands.Cog.listener(name='on_raw_reaction_add')
+    async def join(self, payload):
+        if payload.emoji.name != '▶':
+            return
+        channel = await self.bot.fetch_channel(payload.channel_id)
+        msg = await channel.fetch_message(payload.message_id)
+        user = await self.bot.fetch_user(payload.user_id)
+        message = JoinableMessage(msg, self.bot)
+        if message.is_joinable() is False:
+            return
+        await next(r for r in msg.reactions if r.emoji == '▶').remove(user)
+        if await message.is_joined(user):
+            return
+        await message.add_user(user)
 
 
 def setup(bot):
