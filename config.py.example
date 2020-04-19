@@ -1,11 +1,21 @@
 authkey = 'Put Discord Build-a-bot token here'
 commandchar = '!'         # The character(s) that should prepend a command
-owners = ['XSlicer#6364'] # List of owners, who can load plugins
+owners = ["XSlicer#6364", "ih16#0001", "Sandshark#1101", "Oxidda#1397"] # List of owners
+cache_dir = '/tmp'
 
-role_global_mod = 403111255327375360
-role_anime_mod = 321
-role_user = 403111255327375360
-sotw_channel = 402833313456193538
-cots_channel = 429018486841540608
+role = {
+    'global_mod': 557266057950134284,
+    'anime_mod': 563453635648815144,
+    'user': 403111255327375360
+}
 
+channel = {
+    'sotw': 402833313456193538,
+    'cots': 429018486841540608,
+    'join-anime': 430305539948544010
+}
 
+category = {
+    'anime': 430306918561611788,
+    'manga': 513102749575938058
+}
