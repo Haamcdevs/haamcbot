@@ -149,6 +149,7 @@ class Cots(commands.Cog):
         await ctx.message.channel.send("\n".join(msg))
 
     @cots.command()
+    @commands.has_role(config.role['global_mod'])
     async def finish(self, ctx):
         nominations = await self.get_ranked_nominations(ctx)
         if len(nominations) < 2:
