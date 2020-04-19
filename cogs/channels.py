@@ -50,6 +50,15 @@ class JoinableMessage:
             # Already in the channel
             if ow[1].read_messages is True:
                 return True
+        return False
+
+    async def is_banned(self, user):
+        channel = await self.get_channel()
+        for ow in channel.overwrites.items():
+            if type(ow[0]) is not Member:
+                continue
+            if ow[0].id != user.id:
+                continue
             # Banned
             if ow[1].read_messages is False:
                 return True
@@ -70,7 +79,13 @@ class JoinableMessage:
         channel = await self.get_channel()
         await channel.set_permissions(user, read_messages=True, reason=f"User joined trough joinable channel")
         await channel.send(f":inbox_tray: {user.mention} joined")
-        await self.updateMembers()
+        await self.update_members()
+
+    async def remove_user(self, user):
+        channel = await self.get_channel()
+        await channel.set_permissions(user, overwrite=None, reason=f"User left trough joinable channel")
+        await channel.send(f":outbox_tray: {user.mention} left")
+        await self.update_members()
 
     @staticmethod
     def create_anime_embed(channel, anime, members):
@@ -99,7 +114,7 @@ class JoinableMessage:
     def get_anime(self):
         return self.get_anime_from_url(self.message.embeds[0].author.url)
 
-    async def updateMembers(self):
+    async def update_members(self):
         member_count = await self.get_member_count()
         channel = await self.get_channel()
         anime = self.get_anime()
@@ -157,9 +172,24 @@ class Channels(commands.Cog):
         if message.is_joinable() is False:
             return
         await next(r for r in msg.reactions if r.emoji == '▶').remove(user)
-        if await message.is_joined(user):
+        if await message.is_joined(user) or await message.is_banned(user):
             return
         await message.add_user(user)
+
+    @commands.Cog.listener(name='on_raw_reaction_add')
+    async def leave(self, payload):
+        if payload.emoji.name != '⏹':
+            return
+        channel = await self.bot.fetch_channel(payload.channel_id)
+        msg = await channel.fetch_message(payload.message_id)
+        user = await self.bot.fetch_user(payload.user_id)
+        message = JoinableMessage(msg, self.bot)
+        if message.is_joinable() is False:
+            return
+        await next(r for r in msg.reactions if r.emoji == '⏹').remove(user)
+        if not await message.is_joined(user) or await message.is_banned(user):
+            return
+        await message.remove_user(user)
 
 
 def setup(bot):
