@@ -24,30 +24,24 @@ class CotsNomination(object):
         except IndexError:
             self.votes = 0
 
-    def get_anime_id(self):
+    def parse_id(self, match):
         try:
-            return int(re.search('anime/(\d+)', self.message.content)[1])
+            return int(re.search(rf'{match}/(\d+)', self.message.content)[1])
         except TypeError:
             return False
 
     async def get_anime(self):
         try:
-            return jikan.anime(self.get_anime_id())
+            return jikan.anime(self.parse_id('anime'))
         except APIException as e:
             if '429' not in str(e):
                 raise e
             await asyncio.sleep(0.5)
             return await self.get_anime()
 
-    def get_character_id(self):
-        try:
-            return int(re.search('character/(\d+)', self.message.content)[1])
-        except TypeError:
-            return False
-
     async def get_character(self):
         try:
-            return jikan.character(self.get_character_id())
+            return jikan.character(self.parse_id('character'))
         except APIException as e:
             if '429' not in str(e):
                 raise e
@@ -63,9 +57,9 @@ class CotsNomination(object):
 
     async def validate(self):
         errors = []
-        if not self.get_anime_id():
+        if not self.parse_id('anime'):
             errors.append('Ongeldige anime link')
-        if not self.get_character_id():
+        if not self.parse_id('character'):
             errors.append('Ongeldige character link')
         if len(errors) > 0:
             return errors
@@ -153,6 +147,29 @@ class Cots(commands.Cog):
         for i, n in enumerate(nominations):
             msg.append(f"{i + 1}) " + await n.to_string())
         await ctx.message.channel.send("\n".join(msg))
+
+    @cots.command()
+    async def finish(self, ctx):
+        nominations = await self.get_ranked_nominations(ctx)
+        if len(nominations) < 2:
+            return await ctx.message.channel.send(':x: Niet genoeg nominations')
+        if nominations[0].votes == nominations[1].votes:
+            return await ctx.message.channel.send(':x: Het is een gelijke stand')
+        winner = nominations[0]
+        user = ctx.message.author
+        channel = next(ch for ch in user.guild.channels if ch.id == config.channel['cots'])
+        role = next(r for r in user.guild.roles if r.id == config.role['user'])
+        msg = []
+        for i, n in enumerate(nominations):
+            msg.append(f"{i + 1}) " + await n.to_string())
+        await channel.send("\n".join(msg))
+        character = await winner.get_character()
+        anime = await winner.get_anime()
+        msg = f":trophy: Het character van {self.get_season()} is **{character['name']}**! van {anime['title']}\n" \
+              f"Genomineerd door {winner.message.author.name}\n" \
+              f"{character['url']}"
+        await channel.send(msg)
+        await channel.set_permissions(role, send_messages=False, reason=f'Finishing cots, triggered by {user.name}')
 
 
 def setup(bot):
