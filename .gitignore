@@ -5,4 +5,5 @@ config.py
 /logs/
 /var/
 !/var/.gitignore
+.vscode/launch.json
 !/var/cache
