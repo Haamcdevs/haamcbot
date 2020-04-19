@@ -24,30 +24,24 @@ class CotsNomination(object):
         except IndexError:
             self.votes = 0
 
-    def get_anime_id(self):
+    def parse_id(self, match):
         try:
-            return int(re.search('anime/(\d+)', self.message.content)[1])
+            return int(re.search(rf'{match}/(\d+)', self.message.content)[1])
         except TypeError:
             return False
 
     async def get_anime(self):
         try:
-            return jikan.anime(self.get_anime_id())
+            return jikan.anime(self.parse_id('anime'))
         except APIException as e:
             if '429' not in str(e):
                 raise e
             await asyncio.sleep(0.5)
             return await self.get_anime()
 
-    def get_character_id(self):
-        try:
-            return int(re.search('character/(\d+)', self.message.content)[1])
-        except TypeError:
-            return False
-
     async def get_character(self):
         try:
-            return jikan.character(self.get_character_id())
+            return jikan.character(self.parse_id('character'))
         except APIException as e:
             if '429' not in str(e):
                 raise e
@@ -63,9 +57,9 @@ class CotsNomination(object):
 
     async def validate(self):
         errors = []
-        if not self.get_anime_id():
+        if not self.parse_id('anime'):
             errors.append('Ongeldige anime link')
-        if not self.get_character_id():
+        if not self.parse_id('character'):
             errors.append('Ongeldige character link')
         if len(errors) > 0:
             return errors
