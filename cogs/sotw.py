@@ -1,20 +1,31 @@
-import config
-from discord.ext import commands
-import datetime
-
 import config # Config framework
 from discord.ext import commands # Discord framework
 import datetime # Used to determine weeknumber
+import re # Regex library
 
 class SotwNomination(object):
 
-    def matchPattern(string)
-        # regex: /^%s\:\s?(.*)/im
-        # %s is name of the field, e.g.: artists or title
+    # reusable regex definition to validate field input 
+    def matchPattern(self, string, field):
+        regex = rf"^{field}\:\s?(.*)"
+        match = re.search(regex, string, re.IGNORECASE | re.MULTILINE)
+        if match:
+            return match.group(1), True
+        else:
+            return f"{field} is ongeldig", False
 
-
-    def validate(self):
+    async def validate(self, message):
+        fields = ["artist", "title", "anime", "url"]
         errors = []
+        for field in fields:
+            result = self.matchPattern(message, field)
+            if result[1] == False:
+                errors.append(result[0])
+        if len(errors) > 0: 
+            return errors
+        else:
+            return message
+        
         # split message in fields
         # pass fields through validator
         # if fail, add to errors list
@@ -53,7 +64,7 @@ class Sotw(commands.Cog):
         for msg in reversed(messages):
             if msg.author == self.bot:
                 break
-            nominations.append(SotwNomination(msg))
+            nominations.append(SotwNomination.validate(msg))
         await channel.send(nominations)
 
         # Send the start of the new nomination week
