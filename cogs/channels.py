@@ -1,40 +1,120 @@
-import discord
 import re
 import config
+import requests
+import discord
 from discord.ext import commands
+from discord.member import Member
 from jikanpy import Jikan
+from cachecontrol import CacheControl
+from cachecontrol.heuristics import ExpiresAfter
+from cachecontrol.caches.file_cache import FileCache
 
-jikan = Jikan()
+expires = ExpiresAfter(days=1)
+session = CacheControl(requests.Session(), heuristic=expires, cache=FileCache(config.cache_dir))
+jikan = Jikan(session=session)
+
+
+class JoinableMessage:
+    def __init__(self, message: discord.message, bot):
+        self.message = message
+        self.bot = bot
+
+    def is_joinable(self):
+        if self.message.author.id != self.bot.user.id:
+            return False
+        if len(self.message.embeds) == 0:
+            return False
+        if self.get_field('channel') is None:
+            return False
+        return True
+
+    def get_field(self, name):
+        try:
+            return next(field for field in self.message.embeds[0].fields if field.name == name)
+        except StopIteration:
+            return None
+
+    def get_channel_id(self):
+        return re.search(r'\d+', self.get_field('channel').value)[0]
+
+    async def get_channel(self) -> discord.channel:
+        return await self.bot.fetch_channel(self.get_channel_id())
+
+    async def is_joined(self, user: discord.user):
+        channel = await self.get_channel()
+        return bool([
+            o for o in channel.overwrites.items() if
+            type(o[0]) is Member and o[0].id == user.id and o[1].read_messages is True
+        ])
+
+    async def is_banned(self, user: discord.user):
+        channel = await self.get_channel()
+        return bool([
+            o for o in channel.overwrites.items() if
+            type(o[0]) is Member and o[0].id == user.id and o[1].read_messages is False
+        ])
+
+    async def get_member_count(self):
+        channel = await self.get_channel()
+        return len([
+            o for o in channel.overwrites.items() if type(o[0]) is Member and o[1].read_messages is True
+        ])
+
+    async def add_user(self, user: discord.user):
+        channel = await self.get_channel()
+        await channel.set_permissions(user, read_messages=True, reason=f"User joined trough joinable channel")
+        await channel.send(f":inbox_tray: {user.mention} joined")
+        await self.update_members()
+
+    async def remove_user(self, user: discord.user):
+        channel = await self.get_channel()
+        await channel.set_permissions(user, overwrite=None, reason=f"User left trough joinable channel")
+        await channel.send(f":outbox_tray: {user.mention} left")
+        await self.update_members()
+
+    @staticmethod
+    def create_anime_embed(channel: discord.TextChannel, anime, members):
+        embed = discord.Embed(type='rich')
+        embed.set_author(name=anime['title'], icon_url='https://i.imgur.com/pcdrHvS.png', url=anime['url'])
+        embed.set_footer(text='Druk op de reactions om te joinen / leaven')
+        embed.set_thumbnail(url=anime['image_url'])
+        embed.add_field(name='studio', value=', '.join([stu['name'] for stu in anime['studios']]))
+        embed.add_field(name='datum', value=anime['aired']['string'])
+        embed.add_field(name='genres'.ljust(122) + "ᅠ",
+                        value=', '.join([gen['name'] for gen in anime['genres']]),
+                        inline=False)
+        embed.add_field(name='channel', value=channel.mention)
+        embed.add_field(name='kijkers', value=str(members))
+        return embed
+
+    @staticmethod
+    def get_anime_from_url(url):
+        try:
+            mal_id = re.search(r'\d+', url)
+            return jikan.anime(int(mal_id[0]))
+        except IndexError:
+            return None
+
+    def get_anime(self):
+        return self.get_anime_from_url(self.message.embeds[0].author.url)
+
+    async def update_members(self):
+        member_count = await self.get_member_count()
+        channel = await self.get_channel()
+        anime = self.get_anime()
+        if anime is not None:
+            embed = self.create_anime_embed(channel, anime, member_count)
+            await self.message.edit(embed=embed)
 
 
 class Channels(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-
-    @staticmethod
-    def _getmaldata(url):
-        # Using regex to get MAL id out of URL (easier to use with Jikan)
-        mal_id = re.search('\d+', url)
-        anime = jikan.anime(mal_id[0])
-        return anime
+        self.allowed_roles = [config.role['global_mod'], config.role['anime_mod']]
 
     @staticmethod
     async def _joinmessage(channel, categorychannel, maldata):
-        # Maybe rewrite so its not limited to anime?
-        embed = discord.Embed(
-            type='rich',
-        )
-        embed.set_author(name=maldata['title'], icon_url='https://i.imgur.com/pcdrHvS.png', url=maldata['url'])
-        embed.set_footer(text='Druk op de reactions om te joinen / leaven')
-        embed.set_thumbnail(url=maldata['image_url'])
-        embed.add_field(name='studio', value=', '.join([stu['name'] for stu in maldata['studios']]))
-        embed.add_field(name='datum', value=maldata['aired']['string'])
-        embed.add_field(name='genres'.ljust(122) + "ᅠ",
-                        value=', '.join([gen['name'] for gen in maldata['genres']]),
-                        inline=False)
-        embed.add_field(name='channel', value=channel.mention)
-        # When created, value is 0. Amount increased when someone joins/leaves.
-        embed.add_field(name='kijkers', value=0)
+        embed = JoinableMessage.create_anime_embed(channel, maldata, 0)
         msg = await categorychannel.send(embed=embed)
         await msg.add_reaction('▶')
         await msg.add_reaction('⏹')
@@ -44,8 +124,7 @@ class Channels(commands.Cog):
     async def animechannel(self, ctx, title, malurl):
         guild = ctx.message.guild
         category = next(cat for cat in guild.categories if cat.id == config.category['anime'])
-        # Get maldata here because we need it for the title
-        maldata = Channels._getmaldata(malurl)
+        maldata = JoinableMessage.get_anime_from_url(malurl)
         newchan = await guild.create_text_channel(
             name=title,
             category=category,
@@ -66,6 +145,61 @@ class Channels(commands.Cog):
         msg = await newchan.send(welcomemsg)
         await msg.pin()
 
+    @commands.Cog.listener(name='on_raw_reaction_add')
+    async def join(self, payload):
+        if payload.emoji.name != '▶' or payload.member.bot:
+            return
+        channel = await self.bot.fetch_channel(payload.channel_id)
+        msg = await channel.fetch_message(payload.message_id)
+        user = await self.bot.fetch_user(payload.user_id)
+        message = JoinableMessage(msg, self.bot)
+        if message.is_joinable() is False:
+            return
+        await next(r for r in msg.reactions if r.emoji == '▶').remove(user)
+        if await message.is_joined(user) or await message.is_banned(user):
+            return
+        await message.add_user(user)
+
+    @commands.Cog.listener(name='on_raw_reaction_add')
+    async def leave(self, payload):
+        if payload.emoji.name != '⏹' or payload.member.bot:
+            return
+        channel = await self.bot.fetch_channel(payload.channel_id)
+        msg = await channel.fetch_message(payload.message_id)
+        user = await self.bot.fetch_user(payload.user_id)
+        message = JoinableMessage(msg, self.bot)
+        if message.is_joinable() is False:
+            return
+        await next(r for r in msg.reactions if r.emoji == '⏹').remove(user)
+        if not await message.is_joined(user) or await message.is_banned(user):
+            return
+        await message.remove_user(user)
+
+    @commands.Cog.listener(name='on_raw_reaction_add')
+    async def refresh(self, payload):
+        if payload.emoji.name != '🔁' or not bool([r for r in payload.member.roles if r.id in self.allowed_roles]):
+            return
+        user = await self.bot.fetch_user(payload.user_id)
+        channel = await self.bot.fetch_channel(payload.channel_id)
+        msg = await channel.fetch_message(payload.message_id)
+        message = JoinableMessage(msg, self.bot)
+        if message.is_joinable() is False:
+            return
+        await next(r for r in msg.reactions if r.emoji == '🔁').remove(user)
+        await message.update_members()
+
+    @commands.Cog.listener(name='on_raw_reaction_add')
+    async def delete(self, payload):
+        if payload.emoji.name != '🚮' or not bool([r for r in payload.member.roles if r.id in self.allowed_roles]):
+            return
+        channel = await self.bot.fetch_channel(payload.channel_id)
+        msg = await channel.fetch_message(payload.message_id)
+        message = JoinableMessage(msg, self.bot)
+        if message.is_joinable() is False:
+            return
+        joinable_channel = await message.get_channel()
+        await joinable_channel.delete()
+        await msg.delete()
 
 
 def setup(bot):
