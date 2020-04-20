@@ -88,11 +88,23 @@ class JoinableMessage:
         return embed
 
     @staticmethod
+    def create_simple_embed(channel: discord.TextChannel, members) -> discord.Embed:
+        embed = discord.Embed(type='rich')
+        embed.set_author(icon_url='https://i.imgur.com/pcdrHvS.png', name="")
+        embed.set_footer(text='Druk op de reactions om te joinen / leaven')
+        embed.add_field(name='description'.ljust(122) + "ᅠ", value=channel.topic, inline=False)
+        embed.add_field(name='channel', value=channel.mention)
+        embed.add_field(name='members', value=str(members))
+        return embed
+
+    @staticmethod
     def get_anime_from_url(url):
         try:
             mal_id = re.search(r'\d+', url)
             return jikan.anime(int(mal_id[0]))
         except IndexError:
+            return None
+        except TypeError:
             return None
 
     def get_anime(self):
@@ -105,6 +117,9 @@ class JoinableMessage:
         if anime is not None:
             embed = self.create_anime_embed(channel, anime, member_count)
             await self.message.edit(embed=embed)
+            return
+        embed = self.create_simple_embed(channel, member_count)
+        await self.message.edit(embed=embed)
 
 
 class Channels(commands.Cog):
@@ -113,11 +128,11 @@ class Channels(commands.Cog):
         self.allowed_roles = [config.role['global_mod'], config.role['anime_mod']]
 
     @staticmethod
-    async def _joinmessage(channel, categorychannel, maldata):
-        embed = JoinableMessage.create_anime_embed(channel, maldata, 0)
-        msg = await categorychannel.send(embed=embed)
+    async def _joinmessage(channel, embed) -> discord.message:
+        msg = await channel.send(embed=embed)
         await msg.add_reaction('▶')
         await msg.add_reaction('⏹')
+        return msg
 
     @commands.command(pass_context=True)
     @commands.has_any_role(config.role['global_mod'], config.role['anime_mod'])
@@ -133,8 +148,8 @@ class Channels(commands.Cog):
             reason=f"Aangevraagd door {ctx.author}",
             overwrites=category.overwrites
         )
-        categorychannel = next(chan for chan in guild.channels if chan.id == config.channel['join-anime'])
-        await self._joinmessage(newchan, categorychannel, maldata)
+        embed = JoinableMessage.create_anime_embed(newchan, maldata, 0)
+        await self._joinmessage(ctx.channel, embed)
         await ctx.message.delete()
         welcomemsg = f"Hallo iedereen! In deze channel kijken we naar **{maldata['title']}**.\nMAL: {maldata['url']}"
         if trailer := maldata['trailer_url']:
@@ -144,6 +159,23 @@ class Channels(commands.Cog):
         welcomemsg += f"\nMirai: `m.airing notify channel {maldata['title']}`"
         msg = await newchan.send(welcomemsg)
         await msg.pin()
+
+    @commands.command(pass_context=True)
+    @commands.has_any_role(config.role['global_mod'], config.role['anime_mod'])
+    async def simplechannel(self, ctx, categoryid, name, description):
+        guild = ctx.message.guild
+        category = next(cat for cat in guild.categories if cat.id == int(categoryid))
+        newchan = await guild.create_text_channel(
+            name=name,
+            category=category,
+            topic=description,
+            position=len(category.channels),
+            reason=f"Aangevraagd door {ctx.author}",
+            overwrites=category.overwrites
+        )
+        embed = JoinableMessage.create_simple_embed(newchan, 0)
+        await self._joinmessage(ctx.channel, embed)
+        await ctx.message.delete()
 
     @commands.Cog.listener(name='on_raw_reaction_add')
     async def join(self, payload):
@@ -192,14 +224,28 @@ class Channels(commands.Cog):
     async def delete(self, payload):
         if payload.emoji.name != '🚮' or not bool([r for r in payload.member.roles if r.id in self.allowed_roles]):
             return
+
         channel = await self.bot.fetch_channel(payload.channel_id)
         msg = await channel.fetch_message(payload.message_id)
         message = JoinableMessage(msg, self.bot)
         if message.is_joinable() is False:
             return
+        if message.get_anime() is None:
+            if not bool([r for r in payload.member.roles if r.id == config.role['global_mod']]):
+                return
         joinable_channel = await message.get_channel()
         await joinable_channel.delete()
         await msg.delete()
+
+    @commands.command(pass_context=True)
+    @commands.has_role(config.role['global_mod'])
+    async def rechannel(self, ctx, channelid):
+        channel = await self.bot.fetch_channel(channelid)
+        embed = JoinableMessage.create_simple_embed(channel, 0)
+        message = await self._joinmessage(ctx.channel, embed)
+        message = JoinableMessage(message, self.bot)
+        await message.update_members()
+        await ctx.message.delete()
 
 
 def setup(bot):
