@@ -136,12 +136,12 @@ class Channels(commands.Cog):
 
     @commands.command(pass_context=True, help='Create a joinable anime channel')
     @commands.has_any_role(config.role['global_mod'], config.role['anime_mod'])
-    async def animechannel(self, ctx, title, malurl):
+    async def animechannel(self, ctx, channel_name, mal_anime_url):
         guild = ctx.message.guild
         category = next(cat for cat in guild.categories if cat.id == config.category['anime'])
-        maldata = JoinableMessage.get_anime_from_url(malurl)
+        maldata = JoinableMessage.get_anime_from_url(mal_anime_url)
         newchan = await guild.create_text_channel(
-            name=title,
+            name=channel_name,
             category=category,
             topic=f"{maldata['title']} || {maldata['url']}",
             position=len(category.channels),
