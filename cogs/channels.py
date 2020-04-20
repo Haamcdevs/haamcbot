@@ -134,7 +134,7 @@ class Channels(commands.Cog):
         await msg.add_reaction('⏹')
         return msg
 
-    @commands.command(pass_context=True)
+    @commands.command(pass_context=True, help='Create a joinable anime channel')
     @commands.has_any_role(config.role['global_mod'], config.role['anime_mod'])
     async def animechannel(self, ctx, title, malurl):
         guild = ctx.message.guild
@@ -160,7 +160,7 @@ class Channels(commands.Cog):
         msg = await newchan.send(welcomemsg)
         await msg.pin()
 
-    @commands.command(pass_context=True)
+    @commands.command(pass_context=True, help='Create a simple joinable channel')
     @commands.has_any_role(config.role['global_mod'], config.role['anime_mod'])
     async def simplechannel(self, ctx, categoryid, name, description):
         guild = ctx.message.guild
@@ -237,7 +237,7 @@ class Channels(commands.Cog):
         await joinable_channel.delete()
         await msg.delete()
 
-    @commands.command(pass_context=True)
+    @commands.command(pass_context=True, help='Restore a simple channel join message')
     @commands.has_role(config.role['global_mod'])
     async def rechannel(self, ctx, channelid):
         channel = await self.bot.fetch_channel(channelid)
