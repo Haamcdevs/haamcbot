@@ -162,7 +162,7 @@ class Channels(commands.Cog):
 
     @commands.command(pass_context=True, help='Create a simple joinable channel')
     @commands.has_any_role(config.role['global_mod'], config.role['anime_mod'])
-    async def simplechannel(self, ctx, categoryid, name, description):
+    async def simplechannel(self, ctx, categoryid, name, description='To be announced'):
         guild = ctx.message.guild
         category = next(cat for cat in guild.categories if cat.id == int(categoryid))
         newchan = await guild.create_text_channel(

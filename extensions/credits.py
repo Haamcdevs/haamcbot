@@ -9,7 +9,7 @@ uptime = time.time()
 @commands.command(help='Shows bot credits')
 async def credits(ctx):
     author = 'Haamc devs: https://github.com/Haamcdevs'
-    v= discord.version_info
+    v = discord.version_info
     lib = f'discord.py {v.major}.{v.minor}.{v.micro}-{v.releaselevel}'
     appsoft = sys.version.replace('\n', '')
     runtime = time.time() - uptime
