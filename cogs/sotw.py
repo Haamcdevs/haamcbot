@@ -49,7 +49,7 @@ class Sotw(commands.Cog):
         return number
 
     @commands.group(name='sotw', invoke_without_commands=True)
-    async def sotw(self):
+    async def sotw(self, ctx):
         return
 
     async def get_ranked_nominations(self, ctx):
