@@ -48,10 +48,6 @@ class Sotw(commands.Cog):
         number = datetime.date(d.year, d.month, d.day).isocalendar()[1]
         return number
 
-    # @commands.group(name='sotw')
-    # @commands.Cog.listener()
-    # async def fromMessage()
-
     @commands.group(name='sotw', invoke_without_commands=True)
     async def sotw(self):
         return
@@ -87,18 +83,19 @@ class Sotw(commands.Cog):
             return
         await message.add_reaction('🔼')
 
+    @sotw.command(pass_context=True, help='find winner and start next round of SOTW')
     @commands.has_role(config.role['global_mod'])
-    async def next(self, ctx, cmd):
+    async def next(self, ctx):
         nominations = await self.get_ranked_nominations(ctx)
         if len(nominations) < 2:
             return await ctx.message.channel.send(':x: Niet genoeg nominations')
         if nominations[0].votes == nominations[1].votes:
             return await ctx.message.channel.send(':x: Het is een gelijke stand')
-        # winner = nominations[0]
+        winner = nominations[0]
         user = ctx.message.author
         channel = next(ch for ch in user.guild.channels if ch.id == config.channel['sotw'])
         role = next(r for r in user.guild.roles if r.id == config.role['user'])
-        
+        await ctx.message.channel.send(winner)
         # Disable writes to the SOTW channel so we can declare a winner in a sane way
         # this can be removed
         await channel.set_permissions(role, send_messages=False, reason=f'Stopping sotw, triggered by {user.name}')
