@@ -94,7 +94,8 @@ class Cots(commands.Cog):
         with open('./var/cots_season', 'r') as fd:
             return fd.read()
 
-    @commands.group(name='cots', invoke_without_command=True)
+    @commands.group(name='cots', invoke_without_command=True, help='Character of the Season: start | finish | ranking')
+    @commands.has_role(config.role['global_mod'])
     async def cots(self):
         return
 
@@ -110,7 +111,7 @@ class Cots(commands.Cog):
         nominations.sort(key=operator.attrgetter('votes'), reverse=True)
         return nominations
 
-    @cots.command()
+    @cots.command(pass_context=True)
     @commands.has_role(config.role['global_mod'])
     async def start(self, ctx, season: str, year: str):
         user = ctx.message.author

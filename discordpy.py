@@ -12,13 +12,6 @@ bot = commands.Bot(command_prefix=config.commandchar, description='Description')
 async def on_ready():
     print(f'- Logging in: {bot.user.name} / {bot.user.id} -')
 
-
-# Extensions are python modulkes that contain various commands, cogs or listeners
-@bot.command()
-async def load(ctx, extension):
-    bot.load_extension(f'cogs.{extension}')
-
-
 @bot.event
 async def on_message(msg):
     # Writes logs away in folder logs/servername/channelname_date.log
