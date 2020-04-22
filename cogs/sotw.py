@@ -133,7 +133,7 @@ class Sotw(commands.Cog):
         sotwCursor = database.cursor()
 
         # Send the win message
-        await channel.send(f":trophy: De winnaar van week {self.get_week_number()-1} is: {winner['artist']} - {winner['title']} ({winner['anime']}) door {winner['mention']} {winner['url']}")
+        await channel.send(f":trophy: De winnaar van week {self.get_week_number()-1} is: {winner['artist']} - {winner['title']} ({winner['anime']}) door {winner['mention']} <{winner['url']}>")
         
         # Send the start of the new nomination week
         await channel.send(f"""
