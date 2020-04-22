@@ -94,9 +94,9 @@ class Cots(commands.Cog):
         with open('./var/cots_season', 'r') as fd:
             return fd.read()
 
-    @commands.group(name='cots', invoke_without_command=True, help='Character of the Season: start | finish | ranking')
+    @commands.group(name='cots', invoke_without_command=True, help='Character of the Season')
     @commands.has_role(config.role['global_mod'])
-    async def cots(self):
+    async def cots(self, ctx):
         return
 
     async def get_ranked_nominations(self, ctx):
