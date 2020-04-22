@@ -4,6 +4,14 @@ import asyncio # Provides async I/O functions
 import datetime # Used to determine weeknumber
 import operator # Provides operator functions
 import re # Regex library
+import mysql.connector
+
+database = mysql.connector.connect(
+    host=config.database['host'],
+    user=config.database['user'],
+    password=config.database['password'],
+    database=config.database['name']
+)
 
 class SotwNomination(object):
     def __init__(self, message, count):
@@ -48,8 +56,11 @@ class SotwNomination(object):
         winner = {}
         for field in fields:
             winner[field] = self.getFieldValue(message.message.content, field)
-        winner["author"] = message.message.author.mention
-        winner["youtubecode"] = self.getYoutubeCode(winner["url"])
+        winner["mention"] = message.message.author.mention
+        winner["youtube"] = self.getYoutubeCode(winner["url"])
+        winner["member_id"] = message.message.author.id
+        winner["display_name"] = message.message.author.display_name
+
         return winner
 
 class Sotw(commands.Cog):
@@ -104,10 +115,10 @@ class Sotw(commands.Cog):
     # Determine winner of the previous week and start a new week
     @sotw.command(pass_context=True, help='find winner and start next round of SOTW')
     @commands.has_role(config.role['global_mod'])
-    async def next(self, ctx):
+    async def next(self, ctx, database):
         user = ctx.message.author
         channel = next(ch for ch in user.guild.channels if ch.id == config.channel['sotw'])
-        role = next(r for r in user.guild.roles if r.id == config.role['user'])
+        # role = next(r for r in user.guild.roles if r.id == config.role['user'])
         nominations = await self.get_ranked_nominations(ctx)
 
         # Check if we have enough nominations and if we have a solid win 
@@ -120,12 +131,12 @@ class Sotw(commands.Cog):
         validator = SotwNomination(nominations[0], False)
         winner = await validator.constructWinnerDict(nominations[0])
 
-        await channel.send(f":trophy: De winnaar van week {self.getWeeknumber()-1} is: {winner['artist']} - {winner['title']} ({winner['anime']}) door {winner['author']} {winner['url']}")
-        # Disable writes to the SOTW channel so we can declare a winner in a sane way
-        # this can be removed
-        await channel.set_permissions(role, send_messages=False, reason=f'Stopping sotw, triggered by {user.name}')
-        
+        # Open database before sending win message
+        sotwCursor = database.cursor()
 
+        # Send the win message
+        await channel.send(f":trophy: De winnaar van week {self.getWeeknumber()-1} is: {winner['artist']} - {winner['title']} ({winner['anime']}) door {winner['mention']} {winner['url']}")
+        
         # Send the start of the new nomination week
         await channel.send(f"""
 :musical_note: :musical_note: Bij deze zijn de nominaties voor week {self.getWeeknumber()} geopend! :musical_note: :musical_note:
@@ -137,9 +148,19 @@ anime:
 url: 
 ```
 """)
-        # Re-enable writes to the channel to allow new nominations from users
-        # this can be removed
-        await channel.set_permissions(role, send_messages=True, reason=f'Starting sotw, triggered by {user.name}')
+        
+        # Construct sql
+        sql = "INSERT INTO sotw_winner (member_id, artist, title, anime, youtube, created, votes, display_name) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
+        val = (winner['member_id'], winner['artist'], winner['title'],
+               winner['anime'], winner['youtube'], datetime.datetime.now(),
+               nominations[0].votes, winner['display_name'])
+
+        # Execute SQL
+        sotwCursor.execute(sql, val)
+        
+        # Commit change
+        database.commit()
+        print(sotwCursor.rowcount, "record inserted.")
 
 def setup(bot):
     bot.add_cog(Sotw(bot))

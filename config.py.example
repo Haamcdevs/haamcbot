@@ -3,6 +3,13 @@ commandchar = '!'         # The character(s) that should prepend a command
 owners = ["XSlicer#6364", "ih16#0001", "Sandshark#1101", "Oxidda#1397"] # List of owners
 cache_dir = '/tmp'
 
+database = {
+    'host': 'changeme',
+    'user': 'changeme',
+    'password': 'changeme',
+    'name': 'changeme'
+}
+
 role = {
     'global_mod': 557266057950134284,
     'anime_mod': 563453635648815144,
