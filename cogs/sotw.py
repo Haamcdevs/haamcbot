@@ -113,7 +113,7 @@ class Sotw(commands.Cog):
 
     @sotw.command(pass_context=True, help='find winner and start next round of SOTW')
     @commands.has_role(config.role['global_mod'])
-    async def next(self, ctx, database):
+    async def next(self, ctx):
         user = ctx.message.author
         channel = next(ch for ch in user.guild.channels if ch.id == config.channel['sotw'])
         # role = next(r for r in user.guild.roles if r.id == config.role['user'])
