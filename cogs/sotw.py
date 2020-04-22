@@ -23,7 +23,7 @@ class SotwNomination(object):
                 self.votes = 0
 
     # reusable regex definition to validate field input 
-    def getFieldValue(self, string, field):
+    def get_field_value(self, string, field):
         regex = rf"^{field}\:\s?(.*)"
         match = re.search(regex, string, re.IGNORECASE | re.MULTILINE)
         if match:
@@ -32,7 +32,7 @@ class SotwNomination(object):
             return None
 
     # Get the youtube video code
-    def getYoutubeCode(self, string):
+    def get_youtube_code(self, string):
         regex = rf"([\w]*)$"
         match = re.search(regex, string, re.IGNORECASE | re.MULTILINE)
         if match:
@@ -45,19 +45,19 @@ class SotwNomination(object):
         fields = ["artist", "title", "anime", "url"]
         errors = []
         for field in fields:
-            result = self.getFieldValue(message.content, field)
+            result = self.get_field_value(message.content, field)
             if result == None:
                 errors.append(f"{field} is ongeldig")
         return errors
 
     # Construct dict for winner
-    async def constructWinnerDict(self, message):
+    async def construct_winner_dict(self, message):
         fields = ["artist", "title", "anime", "url"]
         winner = {}
         for field in fields:
-            winner[field] = self.getFieldValue(message.message.content, field)
+            winner[field] = self.get_field_value(message.message.content, field)
         winner["mention"] = message.message.author.mention
-        winner["youtube"] = self.getYoutubeCode(winner["url"])
+        winner["youtube"] = self.get_youtube_code(winner["url"])
         winner["member_id"] = message.message.author.id
         winner["display_name"] = message.message.author.display_name
 
@@ -70,7 +70,7 @@ class Sotw(commands.Cog):
 
     # Get week number
     @staticmethod
-    def getWeeknumber():
+    def get_week_number():
         d = datetime.datetime.today()
         number = datetime.date(d.year, d.month, d.day).isocalendar()[1]
         return number
@@ -80,7 +80,6 @@ class Sotw(commands.Cog):
         return
 
     async def get_ranked_nominations(self, ctx):
-
         user = ctx.message.author
         channel = next(ch for ch in user.guild.channels if ch.id == config.channel['sotw'])
         # Get history of channel since last message from the bot
@@ -112,7 +111,6 @@ class Sotw(commands.Cog):
             return
         await message.add_reaction('🔼')
 
-    # Determine winner of the previous week and start a new week
     @sotw.command(pass_context=True, help='find winner and start next round of SOTW')
     @commands.has_role(config.role['global_mod'])
     async def next(self, ctx, database):
@@ -129,17 +127,17 @@ class Sotw(commands.Cog):
 
         # Build a dict of the winner for the win message and database insertion
         validator = SotwNomination(nominations[0], False)
-        winner = await validator.constructWinnerDict(nominations[0])
+        winner = await validator.construct_winner_dict(nominations[0])
 
         # Open database before sending win message
         sotwCursor = database.cursor()
 
         # Send the win message
-        await channel.send(f":trophy: De winnaar van week {self.getWeeknumber()-1} is: {winner['artist']} - {winner['title']} ({winner['anime']}) door {winner['mention']} {winner['url']}")
+        await channel.send(f":trophy: De winnaar van week {self.get_week_number()-1} is: {winner['artist']} - {winner['title']} ({winner['anime']}) door {winner['mention']} {winner['url']}")
         
         # Send the start of the new nomination week
         await channel.send(f"""
-:musical_note: :musical_note: Bij deze zijn de nominaties voor week {self.getWeeknumber()} geopend! :musical_note: :musical_note:
+:musical_note: :musical_note: Bij deze zijn de nominaties voor week {self.get_week_number()} geopend! :musical_note: :musical_note:
 Nomineer volgens onderstaande template (kopieer en plak deze, en zet er dan de gegevens in):
 ```
 artist: 
