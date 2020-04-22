@@ -12,6 +12,9 @@ Plugin Requires:
 3. Lockfile
 4. mysql-connector-python
 
+A pip requirements freeze has been provided, to install the exact versions perform this command:
+`pip install -r requirements.txt`
+
 Stepts to get it to work:
 1) Copy config.py.example and rename it to config.py
 2) In config set the Authkey to your bot token ( Discord Dev Porta > Select your bot > Bot > Token)
