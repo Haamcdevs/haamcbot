@@ -9,7 +9,7 @@ config.py
 
 # Visual Studio Code related ignores
 .vscode/*
-*.code-workspace
+**.code-workspace
 
 # Local History for Visual Studio Code
 .history/
