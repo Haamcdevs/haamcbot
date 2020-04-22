@@ -15,9 +15,16 @@ async def on_ready():
 @bot.event
 async def on_message(msg):
     # Writes logs away in folder logs/servername/channelname_date.log
-    with open('logs/{}/{}_{}.log'.format(msg.guild, msg.channel, time.strftime('%Y-%m-%d')), 'a') as log:
-        log.write('{}  <{}> {}\n'.format(time.strftime('%Y-%m-%dT%H:%M:%S'),
-                                         msg.author, msg.content.replace('\n', '\n    ')))
+    if config.logging_enabled:
+        logfile = 'logs/{}/{}_{}.log'.format(msg.guild, msg.channel, time.strftime('%Y-%m-%d'))
+        if not os.path.exists(os.path.dirname(logfile)):
+            os.makedirs(os.path.dirname(logfile))
+        with open(logfile, 'a') as log:
+            log.write('{}  <{}> {}\n'.format(
+                time.strftime('%Y-%m-%dT%H:%M:%S'),
+                msg.author,
+                msg.content.replace('\n', '\n    ')
+            ))
     if msg.author.bot:
         return
     # Required to process commands
