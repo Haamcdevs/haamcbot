@@ -5,5 +5,12 @@ config.py
 /logs/
 /var/
 !/var/.gitignore
-.vscode/launch.json
 !/var/cache
+
+# Visual Studio Code related ignores
+.vscode/*
+**.code-workspace
+
+# Local History for Visual Studio Code
+.history/
+
