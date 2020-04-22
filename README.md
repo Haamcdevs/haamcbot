@@ -10,6 +10,7 @@ Plugin Requires:
 1. jikanpy - Myanimelist unofficial api client ( https://pypi.org/project/jikanpy/)
 2. CacheControl - cache the requests
 3. Lockfile
+4. mysql-connector-python
 
 Stepts to get it to work:
 1) Copy config.py.example and rename it to config.py
