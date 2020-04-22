@@ -137,6 +137,7 @@ class Channels(commands.Cog):
     @commands.command(pass_context=True, help='Create a joinable anime channel')
     @commands.has_any_role(config.role['global_mod'], config.role['anime_mod'])
     async def animechannel(self, ctx, channel_name, mal_anime_url):
+        print(f'{ctx.author} creates anime channel {channel_name}')
         guild = ctx.message.guild
         category = next(cat for cat in guild.categories if cat.id == config.category['anime'])
         maldata = JoinableMessage.get_anime_from_url(mal_anime_url)
@@ -163,6 +164,7 @@ class Channels(commands.Cog):
     @commands.command(pass_context=True, help='Create a simple joinable channel')
     @commands.has_any_role(config.role['global_mod'], config.role['anime_mod'])
     async def simplechannel(self, ctx, categoryid, name, description='To be announced'):
+        print(f'{ctx.author} creates simple channel {name} in category {categoryid}')
         guild = ctx.message.guild
         category = next(cat for cat in guild.categories if cat.id == int(categoryid))
         newchan = await guild.create_text_channel(
@@ -189,7 +191,9 @@ class Channels(commands.Cog):
             return
         await next(r for r in msg.reactions if r.emoji == '▶').remove(user)
         if await message.is_joined(user) or await message.is_banned(user):
+            print(f'user {user} has already joined / is banned from {channel}')
             return
+        print(f'user {user} joined {channel}')
         await message.add_user(user)
 
     @commands.Cog.listener(name='on_raw_reaction_add')
@@ -206,6 +210,7 @@ class Channels(commands.Cog):
         if not await message.is_joined(user) or await message.is_banned(user):
             return
         await message.remove_user(user)
+        print(f'user {user} left {channel}')
 
     @commands.Cog.listener(name='on_raw_reaction_add')
     async def refresh(self, payload):
@@ -219,6 +224,7 @@ class Channels(commands.Cog):
             return
         await next(r for r in msg.reactions if r.emoji == '🔁').remove(user)
         await message.update_members()
+        print(f'user {user} updated {channel}')
 
     @commands.Cog.listener(name='on_raw_reaction_add')
     async def delete(self, payload):
@@ -236,6 +242,7 @@ class Channels(commands.Cog):
         joinable_channel = await message.get_channel()
         await joinable_channel.delete()
         await msg.delete()
+        print(f'user {payload.member} deleted {channel}')
 
     @commands.command(pass_context=True, help='Restore a simple channel join message')
     @commands.has_role(config.role['global_mod'])
@@ -246,6 +253,7 @@ class Channels(commands.Cog):
         message = JoinableMessage(message, self.bot)
         await message.update_members()
         await ctx.message.delete()
+        print(f'user {ctx.author} restored {channel}')
 
 
 def setup(bot):

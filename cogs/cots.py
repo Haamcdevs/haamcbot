@@ -114,6 +114,7 @@ class Cots(commands.Cog):
     @cots.command(pass_context=True)
     @commands.has_role(config.role['global_mod'])
     async def start(self, ctx, season: str, year: str):
+        print(f'user {ctx.author} started character of the season {season} {year}')
         user = ctx.message.author
         channel = next(ch for ch in user.guild.channels if ch.id == config.channel['cots'])
         role = next(r for r in user.guild.roles if r.id == config.role['user'])
@@ -135,6 +136,7 @@ class Cots(commands.Cog):
             errors.append('Er ging iets fout bij het ophalen van de anime of het character')
         if len(errors):
             error_message = await message.channel.send("\n:x: " + "\n:x: ".join(errors))
+            print(f"invalid cots nomination\n" + "\n".join(errors))
             await asyncio.sleep(5)
             await message.delete()
             await error_message.delete()
@@ -152,6 +154,7 @@ class Cots(commands.Cog):
     @cots.command()
     @commands.has_role(config.role['global_mod'])
     async def finish(self, ctx):
+        print(f'user {ctx.author} finished character of the season')
         nominations = await self.get_ranked_nominations(ctx)
         if len(nominations) < 2:
             return await ctx.message.channel.send(':x: Niet genoeg nominations')
