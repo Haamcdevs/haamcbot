@@ -33,6 +33,12 @@ class SotwNomination(object):
         else:
             return None
 
+    def get_username(self):
+        return self.message.author.display_name
+
+    def get_userid(self):
+        return self.message.author.id
+
     def get_youtube_code(self):
         regex = rf"([\w]*)$"
         match = re.search(regex, self.get_field_value('url'), re.IGNORECASE | re.MULTILINE)
@@ -106,7 +112,7 @@ class Sotw(commands.Cog):
         msg += f'[/spoiler]\n' \
                f'```\n' \
                f'<https://myanimelist.net/forum/?topicid=1680313>\n' \
-               f't€scores add {nominations[0].message.author.id} 1500'
+               f'`t€scores add {nominations[0].message.author.id} 1500`'
         return msg
 
     # Listen for nominations in the SOTW channel
@@ -114,6 +120,7 @@ class Sotw(commands.Cog):
     async def on_message(self, message):
         if message.author.bot or message.channel.id != config.channel['sotw']:
             return
+        print(f"user {message.author} submitted sotw nomination")
         errors = []
         try:
             nomination = SotwNomination(message)
@@ -125,12 +132,15 @@ class Sotw(commands.Cog):
             await asyncio.sleep(5)
             await message.delete()
             await error_message.delete()
+            print(f"user {message.author}'s sotw nomination was invalid: " + "\n".join(errors))
             return
+        print(f"user {message.author}'s sotw nomination is valid")
         await message.add_reaction('🔼')
 
     @sotw.command(pass_context=True, help='find winner and start next round of SOTW')
     @commands.has_role(config.role['global_mod'])
     async def next(self, ctx):
+        print(f"user {ctx.author} started next song of the week round")
         user = ctx.message.author
         channel = next(ch for ch in user.guild.channels if ch.id == config.channel['sotw'])
         nominations = await self.get_ranked_nominations(ctx)
@@ -173,14 +183,14 @@ class Sotw(commands.Cog):
         sql = "INSERT INTO sotw_winner (member_id, artist, title, anime, youtube, created, votes, display_name)" \
               " VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
         val = (
-            winner.message.author.id,
+            winner.get_userid(),
             winner.get_field_value('artist'),
             winner.get_field_value('title'),
             winner.get_field_value('anime'),
             winner.get_youtube_code(),
             datetime.datetime.now(),
-            nominations[0].votes,
-            winner.message.author.display_name
+            winner.votes,
+            winner.get_username()
         )
 
         # Execute SQL
