@@ -7,7 +7,7 @@ jikan = Jikan()
 
 @commands.command(help='Show anime trailer, wip')
 async def trailer(ctx):
-    ctx.send("wip")
+    await ctx.channel.send("soon (tm)")
 
 
 def setup(bot):

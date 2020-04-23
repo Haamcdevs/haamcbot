@@ -3,7 +3,6 @@ import io
 import os
 from discord import File
 from discord.ext import commands
-from discord.member import Member
 
 
 @commands.command(help='Export a .csv of messages with their emoji count')
@@ -33,6 +32,8 @@ async def export(ctx, channel_id: int = 0):
 
     binary = io.BytesIO(output.getvalue().encode('utf-8'))
     await ctx.send(f'Here is your export {ctx.author.mention}', file=File(binary, f"{channel.name}.csv"))
-  
+    print(f'{ctx.author} exported {channel}')
+
+
 def setup(bot):
     bot.add_command(export)

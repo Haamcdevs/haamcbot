@@ -19,6 +19,7 @@ async def credits(ctx):
     seconds = int(runtime % 60)
     runtime = "{} days, {} hours, {} mins, {} seconds".format(days, hours, mins, seconds)
     await ctx.send(f"**Info**\n- Author: {author}\n- Library: {lib}\n- Runtime: Python {appsoft}\n- Uptime: {runtime}")
+    print(f"{ctx.author} showed the bot credits <3")
 
 
 def setup(bot):

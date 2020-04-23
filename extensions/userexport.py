@@ -27,6 +27,7 @@ async def userexport(ctx, channel_id: int = 0):
 
     binary = io.BytesIO(output.getvalue().encode('utf-8'))
     await ctx.send(f'Here is your export {ctx.author.mention}', file=File(binary, f"{channel.name}.csv"))
+    print(f"{ctx.author} exported users for channel {channel}")
 
 
 def setup(bot):
