@@ -13,7 +13,7 @@ database = mysql.connector.connect(
 )
 
 
-class Bikkelpunt_utils(object):
+class BikkelpuntUtils(object):
     def __init__(self):
         self.bikkelpunt_cursor = database.cursor(dictionary=True)
 
@@ -29,11 +29,10 @@ class Bikkelpunt_utils(object):
 
     def has_cooldown(self, record):
         today = datetime.today().date()
-        print(record)
         if record.get('last_update').date() == today:
             return True
         return False
-    
+
     def create_bikkelpunt_record(self, message):
         sql = "INSERT INTO bikkel (member_id, points, last_update, display_name)" \
               " VALUES (%s, %s, %s, %s)"
@@ -52,7 +51,7 @@ class Bikkelpunt_utils(object):
     def update_bikkelpunt_record(self, message, current_points):
         sql = "UPDATE bikkel SET points = %s, last_update = %s, display_name = %s WHERE member_id = %s"
         val = (
-            current_points+1,
+            current_points + 1,
             datetime.utcnow(),
             message.author.display_name,
             message.author.id
@@ -71,15 +70,15 @@ class Bikkelpunt_utils(object):
     def get_top_10_message(self):
         msg = ":last_quarter_moon_with_face: **HAAMC Discord bikkel ranking** *top 10*\n"
         for i, bikkel in enumerate(self.load_top_10()):
-            msg += f"#{i+1} **{bikkel['display_name']}** met **{bikkel['points']}** punten\n"
+            msg += f"#{i + 1} **{bikkel['display_name']}** met **{bikkel['points']}** punten\n"
         return msg
 
 
 class Bikkelpunt(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.utils = Bikkelpunt_utils()
-    
+        self.utils = BikkelpuntUtils()
+
     @commands.group(name='bikkel', invoke_without_commands=False, help='Bikkel punten')
     async def bikkel(self, ctx):
         return
@@ -89,26 +88,23 @@ class Bikkelpunt(commands.Cog):
         # first check if the time is right before doing anything else
         check_time = self.utils.is_time_correct()
         if check_time is False:
-            await ctx.channel.send(
+            return await ctx.channel.send(
                 f":last_quarter_moon_with_face: Echte bikkels leven tussen 03:00 en 05:00!"
-                )
-            return
+            )
         record = self.utils.get_existing_record(ctx.message.author.id)
         if record is None:
             self.utils.create_bikkelpunt_record(ctx.message)
             record = self.utils.get_existing_record(ctx.message.author.id)
         else:
-            has_cooldown = self.utils.has_cooldown(record)
-            if has_cooldown:
-                await ctx.channel.send(
+            if self.utils.has_cooldown(record):
+                return await ctx.channel.send(
                     f":last_quarter_moon_with_face: Je hebt al gebikkelt vandaag, probeer het morgen nog eens"
                 )
-                return
-        self.utils.update_bikkelpunt_record(
-            ctx.message, record.get('points'))
+        self.utils.update_bikkelpunt_record(ctx.message, record.get('points'))
         await ctx.channel.send(
-            f":last_quarter_moon_with_face: Je bent een echte bikkel! **+1** (**{record.get('points')+1}** punten totaal)"
-            )
+            f":last_quarter_moon_with_face: Je bent een echte bikkel! "
+            f"**+1** (**{record.get('points') + 1}** punten totaal)"
+        )
 
     @bikkel.command()
     async def ranking(self, ctx):
