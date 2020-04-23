@@ -86,7 +86,7 @@ class Sotw(commands.Cog):
         number = datetime.date(d.year, d.month, d.day).isocalendar()[1]
         return number
 
-    @commands.group(name='sotw', invoke_without_commands=True)
+    @commands.group(name='sotw', invoke_without_commands=True, help='Song of the week')
     async def sotw(self, ctx):
         return
 
@@ -120,7 +120,7 @@ class Sotw(commands.Cog):
     async def on_message(self, message):
         if message.author.bot or message.channel.id != config.channel['sotw']:
             return
-        print(f"user {message.author} submitted sotw nomination")
+        print(f"user {message.author} submitted sotw nomination\n\n{message.content}\n")
         errors = []
         try:
             nomination = SotwNomination(message)
@@ -137,7 +137,7 @@ class Sotw(commands.Cog):
         print(f"user {message.author}'s sotw nomination is valid")
         await message.add_reaction('🔼')
 
-    @sotw.command(pass_context=True, help='find winner and start next round of SOTW')
+    @sotw.command(pass_context=True, help='F:faceind winner and start next round of SOTW')
     @commands.has_role(config.role['global_mod'])
     async def next(self, ctx):
         print(f"user {ctx.author} started next song of the week round")

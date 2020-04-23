@@ -161,12 +161,15 @@ class Channels(commands.Cog):
         msg = await newchan.send(welcomemsg)
         await msg.pin()
 
-    @commands.command(pass_context=True, help='Create a simple joinable channel')
+    @commands.command(pass_context=True, help='Create a simple joinable channel (use quotes for description)')
     @commands.has_any_role(config.role['global_mod'], config.role['anime_mod'])
     async def simplechannel(self, ctx, categoryid, name, description='To be announced'):
         print(f'{ctx.author} creates simple channel {name} in category {categoryid}')
         guild = ctx.message.guild
-        category = next(cat for cat in guild.categories if cat.id == int(categoryid))
+        try:
+            category = next(cat for cat in guild.categories if cat.id == int(categoryid))
+        except StopIteration:
+            await ctx.channel.send(f':x: Cant find category <#{categoryid}> :thinking:')
         newchan = await guild.create_text_channel(
             name=name,
             category=category,
