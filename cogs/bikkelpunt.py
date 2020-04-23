@@ -3,6 +3,7 @@ import discord
 from discord.ext import commands
 from datetime import datetime, time
 import mysql.connector
+import pytz
 
 database = mysql.connector.connect(
     host=config.database['host'],
@@ -38,7 +39,7 @@ class Bikkelpunt_utils(object):
               " VALUES (%s, %s, %s, %s)"
         val = (
             message.author.id,
-            1,
+            0,
             datetime.utcnow(),
             message.author.display_name
         )
@@ -95,6 +96,7 @@ class Bikkelpunt(commands.Cog):
         record = self.utils.get_existing_record(ctx.message.author.id)
         if record is None:
             self.utils.create_bikkelpunt_record(ctx.message)
+            record = self.utils.get_existing_record(ctx.message.author.id)
         else:
             has_cooldown = self.utils.has_cooldown(record)
             if has_cooldown:
