@@ -196,7 +196,8 @@ class Channels(commands.Cog):
         if await message.is_joined(user) or await message.is_banned(user):
             print(f'user {user} has already joined / is banned from {channel}')
             return
-        print(f'user {user} joined {channel}')
+        joinable_channel = await message.get_channel()
+        print(f'user {user} joined {joinable_channel}')
         await message.add_user(user)
 
     @commands.Cog.listener(name='on_raw_reaction_add')
@@ -213,7 +214,8 @@ class Channels(commands.Cog):
         if not await message.is_joined(user) or await message.is_banned(user):
             return
         await message.remove_user(user)
-        print(f'user {user} left {channel}')
+        joinable_channel = await message.get_channel()
+        print(f'user {user} left {joinable_channel}')
 
     @commands.Cog.listener(name='on_raw_reaction_add')
     async def refresh(self, payload):
@@ -227,7 +229,8 @@ class Channels(commands.Cog):
             return
         await next(r for r in msg.reactions if r.emoji == '🔁').remove(user)
         await message.update_members()
-        print(f'user {user} updated {channel}')
+        joinable_channel = await message.get_channel()
+        print(f'user {user} updated {joinable_channel}')
 
     @commands.Cog.listener(name='on_raw_reaction_add')
     async def delete(self, payload):
@@ -245,7 +248,7 @@ class Channels(commands.Cog):
         joinable_channel = await message.get_channel()
         await joinable_channel.delete()
         await msg.delete()
-        print(f'user {payload.member} deleted {channel}')
+        print(f'user {payload.member} deleted {joinable_channel}')
 
     @commands.command(pass_context=True, help='Restore a simple channel join message')
     @commands.has_role(config.role['global_mod'])
