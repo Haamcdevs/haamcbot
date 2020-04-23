@@ -162,7 +162,7 @@ class Channels(commands.Cog):
         await msg.pin()
 
     @commands.command(pass_context=True, help='Create a simple joinable channel (use quotes for description)')
-    @commands.has_any_role(config.role['global_mod'], config.role['anime_mod'])
+    @commands.has_role(config.role['global_mod'])
     async def simplechannel(self, ctx, categoryid, name, description='To be announced'):
         print(f'{ctx.author} creates simple channel {name} in category {categoryid}')
         guild = ctx.message.guild
