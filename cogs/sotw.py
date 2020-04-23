@@ -137,7 +137,7 @@ class Sotw(commands.Cog):
         print(f"user {message.author}'s sotw nomination is valid")
         await message.add_reaction('🔼')
 
-    @sotw.command(pass_context=True, help='F:faceind winner and start next round of SOTW')
+    @sotw.command(pass_context=True, help='Announce the winner and start next round of SOTW')
     @commands.has_role(config.role['global_mod'])
     async def next(self, ctx):
         print(f"user {ctx.author} started next song of the week round")
