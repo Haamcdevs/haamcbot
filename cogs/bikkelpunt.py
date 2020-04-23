@@ -11,6 +11,7 @@ database = mysql.connector.connect(
     database=config.database['name']
 )
 
+
 class Bikkelpunt_utils(object):
     def __init__(self):
         self.bikkelpunt_cursor = database.cursor(dictionary=True)
@@ -59,9 +60,8 @@ class Bikkelpunt_utils(object):
 
     def get_top_10_message(self):
         msg = ":last_quarter_moon_with_face: **HAAMC Discord bikkel ranking** *top 10*\n"
-        for bikkel in self.load_top_10():
-            print(bikkel)
-            msg += f"{bikkel['display_name']}\n"
+        for i, bikkel in enumerate(self.load_top_10()):
+            msg += f"#{i+1} **{bikkel['display_name']}** met **{bikkel['points']}** punten\n"
         return msg
 
 
