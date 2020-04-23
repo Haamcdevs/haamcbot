@@ -17,23 +17,19 @@ class Bikkelpunt_utils(object):
         self.bikkelpunt_cursor = database.cursor(dictionary=True)
 
     def is_time_correct(self):
-        # If check time is not given, default to current UTC time
-        # check_time = datetime.astimezone('Europe/Amsterdam')
-        check_time = datetime.utcnow().time()
-        if check_time >= time(16, 00) and check_time <= time(20, 00):
-            return True
-        else:
-            return False
+        date = datetime.now(pytz.timezone('Europe/Amsterdam'))
+        check_time = date.time()
+        return time(3, 00) <= check_time <= time(5, 00)
 
     def get_existing_record(self, member_id):
         sql = f"SELECT * FROM bikkel where member_id = {member_id}"
         self.bikkelpunt_cursor.execute(sql)
         return self.bikkelpunt_cursor.fetchone()
 
-    def has_cooldown(self, result):
+    def has_cooldown(self, record):
         today = datetime.today().date()
-        print(result)
-        if result[3].date() == today:
+        print(record)
+        if record.get('last_update').date() == today:
             return True
         return False
     
@@ -52,6 +48,19 @@ class Bikkelpunt_utils(object):
         # Commit change
         database.commit()
 
+    def update_bikkelpunt_record(self, message, current_points):
+        sql = "UPDATE bikkel SET points = %s, last_update = %s, display_name = %s WHERE member_id = %s"
+        val = (
+            current_points+1,
+            datetime.utcnow(),
+            message.author.display_name,
+            message.author.id
+        )
+        # Execute SQL
+        self.bikkelpunt_cursor.execute(sql, val)
+
+        # Commit change
+        database.commit()
 
     def load_top_10(self):
         sql = 'SELECT * FROM bikkel ORDER BY points DESC LIMIT 0,10'
@@ -93,8 +102,10 @@ class Bikkelpunt(commands.Cog):
                     f":last_quarter_moon_with_face: Je hebt al gebikkelt vandaag, probeer het morgen nog eens"
                 )
                 return
+        self.utils.update_bikkelpunt_record(
+            ctx.message, record.get('points'))
         await ctx.channel.send(
-            f":last_quarter_moon_with_face: Je bent een echte bikkel! **+1** (**{record.get[2]+1}** punten totaal)"
+            f":last_quarter_moon_with_face: Je bent een echte bikkel! **+1** (**{record.get('points')+1}** punten totaal)"
             )
 
     @bikkel.command()
