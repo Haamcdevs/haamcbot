@@ -106,7 +106,7 @@ class Bikkelpunt(commands.Cog):
             f"**+1** (**{record.get('points') + 1}** punten totaal)"
         )
 
-    @bikkel.command()
+    @bikkel.command(help='Toon de top 10 bikkelpunten')
     async def ranking(self, ctx):
         await ctx.channel.send(self.utils.get_top_10_message())
 
