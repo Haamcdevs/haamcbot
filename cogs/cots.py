@@ -1,14 +1,15 @@
-import config
 import re
 import asyncio
 import operator
-from discord.ext import commands
+
 import requests
-from jikanpy import Jikan
-from jikanpy import APIException
+from discord.ext import commands
+from jikanpy import Jikan, APIException
 from cachecontrol import CacheControl
 from cachecontrol.heuristics import ExpiresAfter
 from cachecontrol.caches.file_cache import FileCache
+
+import config
 
 expires = ExpiresAfter(days=1)
 session = CacheControl(requests.Session(), heuristic=expires, cache=FileCache(config.cache_dir))

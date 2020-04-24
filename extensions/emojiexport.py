@@ -1,8 +1,10 @@
-import config
 import io
 import os
+
 from discord import File
 from discord.ext import commands
+
+import config
 
 
 @commands.command(help='Export a .csv of messages with their emoji count')
@@ -26,7 +28,7 @@ async def export(ctx, channel_id: int = 0):
         return   
     else:
        for message in messageswithReactions:
-            reaction = max(message.reactions, key = lambda k: k.count )
+            reaction = max(message.reactions, key=lambda k: k.count)
             messageContent = message.content.replace(',','\,').replace('\n',' ')
             output.write(f"{reaction.emoji},{reaction.count},{messageContent},{message.author},{message.created_at}{os.linesep}")
 

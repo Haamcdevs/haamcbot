@@ -1,13 +1,14 @@
-from typing import List
-
-import config
-import discord
-from discord.ext import commands
+import re
 import asyncio
 import datetime
 import operator
-import re
+from typing import List
+
+import discord
+from discord.ext import commands
 import mysql.connector
+
+import config
 
 database = mysql.connector.connect(
     host=config.database['host'],
