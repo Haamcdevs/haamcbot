@@ -1,6 +1,6 @@
 import re
-import config
 import requests
+
 import discord
 from discord.ext import commands
 from discord.member import Member
@@ -8,6 +8,8 @@ from jikanpy import Jikan
 from cachecontrol import CacheControl
 from cachecontrol.heuristics import ExpiresAfter
 from cachecontrol.caches.file_cache import FileCache
+
+import config
 
 expires = ExpiresAfter(days=1)
 session = CacheControl(requests.Session(), heuristic=expires, cache=FileCache(config.cache_dir))

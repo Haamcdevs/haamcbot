@@ -1,9 +1,11 @@
-import config
 import io
 import os
+
 from discord import File
 from discord.ext import commands
 from discord.member import Member
+
+import config
 
 
 @commands.command(help='Export a .csv of users who joined a joinable channel')

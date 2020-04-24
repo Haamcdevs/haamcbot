@@ -1,9 +1,11 @@
-import config
-import discord
-from discord.ext import commands
 from datetime import datetime, time
+
 import mysql.connector
 import pytz
+import discord
+from discord.ext import commands
+
+import config
 
 database = mysql.connector.connect(
     host=config.database['host'],
