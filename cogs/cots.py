@@ -138,9 +138,8 @@ class Cots(commands.Cog):
         if len(errors):
             error_message = await message.channel.send("\n:x: " + "\n:x: ".join(errors))
             print(f"invalid cots nomination\n" + "\n".join(errors))
-            await asyncio.sleep(5)
-            await message.delete()
-            await error_message.delete()
+            await message.delete(delay=5)
+            await error_message.delete(delay=5)
             return
         await message.add_reaction('🔼')
 

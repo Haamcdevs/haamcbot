@@ -131,9 +131,8 @@ class Sotw(commands.Cog):
             print(e)
         if len(errors):
             error_message = await message.channel.send("\n:x: " + "\n:x: ".join(errors))
-            await asyncio.sleep(5)
-            await message.delete()
-            await error_message.delete()
+            await message.delete(delay=5)
+            await error_message.delete(delay=5)
             print(f"user {message.author}'s sotw nomination was invalid: " + "\n".join(errors))
             return
         print(f"user {message.author}'s sotw nomination is valid")
