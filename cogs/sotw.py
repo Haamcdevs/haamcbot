@@ -140,6 +140,7 @@ class Sotw(commands.Cog):
     @commands.has_role(config.role['global_mod'])
     async def next(self, ctx):
         print(f"user {ctx.author} started next song of the week round")
+        database.reconnect()
         user = ctx.message.author
         channel = next(ch for ch in user.guild.channels if ch.id == config.channel['sotw'])
         nominations = await self.get_ranked_nominations(ctx)

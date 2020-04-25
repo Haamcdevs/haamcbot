@@ -85,6 +85,7 @@ class Bikkelpunt(commands.Cog):
 
     @bikkel.command(pass_context=True, help='Verdien een bikkelpunt')
     async def get(self, ctx):
+        database.reconnect()
         # first check if the time is right before doing anything else
         check_time = self.utils.is_time_correct()
         if check_time is False:
@@ -108,6 +109,7 @@ class Bikkelpunt(commands.Cog):
 
     @bikkel.command(help='Toon de top 10 bikkelpunten')
     async def ranking(self, ctx):
+        database.reconnect()
         await ctx.channel.send(self.utils.get_top_10_message())
 
 
