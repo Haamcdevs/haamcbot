@@ -96,7 +96,6 @@ class Cots(commands.Cog):
             return fd.read()
 
     @commands.group(name='cots', invoke_without_command=True, help='Character of the Season')
-    @commands.has_role(config.role['global_mod'])
     async def cots(self, ctx):
         return
 
