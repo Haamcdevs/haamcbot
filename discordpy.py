@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
+
 import os
-import config
-from discord.ext import commands
 import time
 
+from discord.ext import commands
+
+import config
 
 bot = commands.Bot(command_prefix=config.commandchar, description='Description')
 
@@ -17,8 +19,7 @@ async def on_message(msg):
     # Writes logs away in folder logs/servername/channelname_date.log
     if config.logging_enabled:
         logfile = 'logs/{}/{}_{}.log'.format(msg.guild, msg.channel, time.strftime('%Y-%m-%d'))
-        if not os.path.exists(os.path.dirname(logfile)):
-            os.makedirs(os.path.dirname(logfile))
+        os.makedirs(os.path.dirname(logfile), exist_ok=True)
         with open(logfile, 'a') as log:
             log.write('{}  <{}> {}\n'.format(
                 time.strftime('%Y-%m-%dT%H:%M:%S'),
