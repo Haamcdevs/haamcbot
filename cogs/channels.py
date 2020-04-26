@@ -130,6 +130,12 @@ class Channels(commands.Cog):
         self.allowed_roles = [config.role['global_mod'], config.role['anime_mod']]
 
     @staticmethod
+    def get_overwites(guild: discord.guild, category: discord.CategoryChannel):
+        overwrites = category.overwrites
+        overwrites[guild.default_role] = discord.PermissionOverwrite(read_messages=False)
+        return overwrites
+
+    @staticmethod
     async def _joinmessage(channel, embed) -> discord.message:
         msg = await channel.send(embed=embed)
         await msg.add_reaction('▶')
@@ -149,7 +155,7 @@ class Channels(commands.Cog):
             topic=f"{maldata['title']} || {maldata['url']}",
             position=len(category.channels),
             reason=f"Aangevraagd door {ctx.author}",
-            overwrites=category.overwrites
+            overwrites=self.get_overwites(guild, category)
         )
         embed = JoinableMessage.create_anime_embed(newchan, maldata, 0)
         await self._joinmessage(ctx.channel, embed)
@@ -172,13 +178,14 @@ class Channels(commands.Cog):
             category = next(cat for cat in guild.categories if cat.id == int(categoryid))
         except StopIteration:
             await ctx.channel.send(f':x: Cant find category <#{categoryid}> :thinking:')
+            return
         newchan = await guild.create_text_channel(
             name=name,
             category=category,
             topic=description,
             position=len(category.channels),
             reason=f"Aangevraagd door {ctx.author}",
-            overwrites=category.overwrites
+            overwrites=self.get_overwites(guild, category)
         )
         embed = JoinableMessage.create_simple_embed(newchan, 0)
         await self._joinmessage(ctx.channel, embed)
