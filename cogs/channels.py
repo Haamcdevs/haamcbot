@@ -202,10 +202,10 @@ class Channels(commands.Cog):
         if message.is_joinable() is False:
             return
         await next(r for r in msg.reactions if r.emoji == '▶').remove(user)
-        if await message.is_joined(user) or await message.is_banned(user):
-            print(f'user {user} has already joined / is banned from {channel}')
-            return
         joinable_channel = await message.get_channel()
+        if await message.is_joined(user) or await message.is_banned(user):
+            print(f'user {user} has already joined / is banned from {joinable_channel}')
+            return
         print(f'user {user} joined {joinable_channel}')
         await message.add_user(user)
 
