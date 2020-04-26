@@ -121,7 +121,12 @@ class Cots(commands.Cog):
         season = f'{season} {year}'
         self.set_season(season)
         await channel.send(f"Bij deze zijn de nominaties voor season {season} geopend!")
-        await channel.set_permissions(role, send_messages=True, reason=f'Starting cots, triggered by {user.name}')
+        await channel.set_permissions(
+            role,
+            read_messages=True,
+            send_messages=True,
+            reason=f'Starting cots, triggered by {user.name}'
+        )
 
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -173,7 +178,12 @@ class Cots(commands.Cog):
               f"Genomineerd door {winner.message.author.name}\n" \
               f"{character['url']}"
         await channel.send(msg)
-        await channel.set_permissions(role, send_messages=False, reason=f'Finishing cots, triggered by {user.name}')
+        await channel.set_permissions(
+            role,
+            send_messages=False,
+            read_messages=True,
+            reason=f'Finishing cots, triggered by {user.name}'
+        )
 
 
 def setup(bot):
