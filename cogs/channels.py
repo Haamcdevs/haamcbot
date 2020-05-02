@@ -59,7 +59,8 @@ class JoinableMessage:
     async def get_member_count(self):
         channel = await self.get_channel()
         return len([
-            o for o in channel.overwrites.items() if type(o[0]) is Member and o[1].read_messages is True
+            o for o in channel.overwrites.items()
+            if type(o[0]) is Member and o[1].read_messages is True and o[0].bot is False
         ])
 
     async def add_user(self, user: discord.user):
