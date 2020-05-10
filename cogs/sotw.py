@@ -27,10 +27,10 @@ class SotwNomination(object):
             self.votes = 0
 
     def get_field_value(self, field):
-        regex = rf"^{field}\:\s?(.*)"
+        regex = rf"{field}\:([^\n]+)"
         match = re.search(regex, self.message.content, re.IGNORECASE | re.MULTILINE)
         if match:
-            return match.group(1)
+            return match.group(1).strip()
         else:
             return None
 
@@ -57,8 +57,12 @@ class SotwNomination(object):
         errors = []
         for field in fields:
             result = self.get_field_value(field)
-            if result is None:
+            if result is None or result == '':
                 errors.append(f"{field} is ongeldig")
+            if field == 'url' and re.match(r'.*youtu\.?be.*', result) is None:
+                print(result)
+                errors.append(f"Youtube url is required")
+
         return errors
 
     def get_winner_text(self, week):
@@ -73,6 +77,13 @@ class SotwNomination(object):
                f" - {self.get_field_value('title')} ({self.get_field_value('anime')})\"]" \
                f"[yt]{yt_code}[/yt]" \
                f"[/spoiler]\n"
+
+    def get_ranking_text(self, i: int):
+        return f":radio: {i + 1}) **{self.get_field_value('artist')}** - " \
+               f"**{self.get_field_value('title')}**\n" \
+               f"votes: **{self.votes}** | " \
+               f"anime: *{self.get_field_value('anime')}* | " \
+               f"door: {self.message.author.display_name}\n"
 
 
 class Sotw(commands.Cog):
@@ -137,6 +148,14 @@ class Sotw(commands.Cog):
             return
         print(f"user {message.author}'s sotw nomination is valid")
         await message.add_reaction('🔼')
+
+    @sotw.command(pass_context=True, help='Show the SOTW ranking')
+    async def ranking(self, ctx):
+        nominations = await self.get_ranked_nominations(ctx)
+        msg = ''
+        for i, nomination in enumerate(nominations):
+            msg += nomination.get_ranking_text(i)
+        await ctx.channel.send(msg)
 
     @sotw.command(pass_context=True, help='Announce the winner and start next round of SOTW')
     @commands.has_role(config.role['global_mod'])
