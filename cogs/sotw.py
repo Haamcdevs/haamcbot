@@ -59,8 +59,7 @@ class SotwNomination(object):
             result = self.get_field_value(field)
             if result is None or result == '':
                 errors.append(f"{field} is ongeldig")
-            if field == 'url' and re.match(r'.*youtu\.?be.*', result) is None:
-                print(result)
+            if field == 'url' and result is not None and re.match(r'.*youtu\.?be.*', result) is None:
                 errors.append(f"Youtube url is required")
 
         return errors
