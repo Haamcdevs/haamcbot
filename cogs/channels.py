@@ -103,8 +103,8 @@ class JoinableMessage:
     @staticmethod
     def get_anime_from_url(url):
         try:
-            mal_id = re.search(r'\d+', url)
-            return jikan.anime(int(mal_id[0]))
+            mal_id = re.search(r'anime/(\d+)', url)
+            return jikan.anime(int(mal_id[1]))
         except IndexError:
             return None
         except TypeError:

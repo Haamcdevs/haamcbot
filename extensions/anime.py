@@ -24,7 +24,6 @@ async def anime(ctx, *search):
     anime_id = search['results'][0]['mal_id']
     anime = jikan.anime(anime_id)
     description_parts = textwrap.wrap(anime['synopsis'], 1000)
-    genres = []
     genres = [g['name'] for g in anime['genres']]
     embed = discord.Embed(type='rich', title=anime['title'])
     embed.set_thumbnail(url=anime['image_url'])
