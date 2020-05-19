@@ -98,7 +98,6 @@ class Sotw(commands.Cog):
         return number
 
     @commands.group(name='sotw', invoke_without_commands=True, help='Song of the week')
-    @commands.has_role(config.role['global_mod'])
     async def sotw(self, ctx):
         return
 
