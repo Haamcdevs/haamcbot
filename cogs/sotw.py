@@ -41,7 +41,7 @@ class SotwNomination(object):
         return self.message.author.id
 
     def get_youtube_code(self):
-        regex = rf"([\w]*)$"
+        regex = rf"([\w-]*)$"
         match = re.search(regex, self.get_field_value('url'), re.IGNORECASE | re.MULTILINE)
         if match:
             return match.group(1)
