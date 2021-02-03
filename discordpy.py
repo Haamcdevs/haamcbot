@@ -2,12 +2,14 @@
 
 import os
 import time
+import discord
 
 from discord.ext import commands
 
 import config
 
-bot = commands.Bot(command_prefix=config.commandchar, description='Description')
+intents = discord.Intents.default()
+bot = commands.Bot(command_prefix=config.commandchar, description='Description', intents=intents.all())
 
 
 @bot.event
