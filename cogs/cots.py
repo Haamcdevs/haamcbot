@@ -154,7 +154,7 @@ class Cots(commands.Cog):
         for i, n in enumerate(nominations):
             msg.append(f"{i + 1}) " + await n.to_string())
             if len(msg) == 10:
-                ctx.message.channel.send("\n".join(msg))
+                await ctx.message.channel.send("\n".join(msg))
                 msg = []
         if len(msg) > 0:
             await ctx.message.channel.send("\n".join(msg))
@@ -176,7 +176,7 @@ class Cots(commands.Cog):
         for i, n in enumerate(nominations):
             msg.append(f"{i + 1}) " + await n.to_string())
             if len(msg) == 10:
-                ctx.message.channel.send("\n".join(msg))
+                await ctx.message.channel.send("\n".join(msg))
                 msg = []
         if len(msg) > 0:
             await channel.send("\n".join(msg))
