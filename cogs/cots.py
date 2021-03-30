@@ -153,7 +153,11 @@ class Cots(commands.Cog):
         msg = []
         for i, n in enumerate(nominations):
             msg.append(f"{i + 1}) " + await n.to_string())
-        await ctx.message.channel.send("\n".join(msg))
+            if len(msg) == 10:
+                ctx.message.channel.send("\n".join(msg))
+                msg = []
+        if len(msg) > 0:
+            await ctx.message.channel.send("\n".join(msg))
 
     @cots.command()
     @commands.has_role(config.role['global_mod'])
@@ -171,7 +175,11 @@ class Cots(commands.Cog):
         msg = []
         for i, n in enumerate(nominations):
             msg.append(f"{i + 1}) " + await n.to_string())
-        await channel.send("\n".join(msg))
+            if len(msg) == 10:
+                ctx.message.channel.send("\n".join(msg))
+                msg = []
+        if len(msg) > 0:
+            await channel.send("\n".join(msg))
         character = await winner.get_character()
         anime = await winner.get_anime()
         msg = f":trophy: Het character van {self.get_season()} is **{character['name']}**! van {anime['title']}\n" \
