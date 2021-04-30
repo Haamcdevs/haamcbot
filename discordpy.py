@@ -40,7 +40,7 @@ if __name__ == '__main__':
         if filename.endswith('.py'):
             bot.load_extension(f'cogs.{filename[:-3]}')
             print(f'Loaded cogs.{filename[:-3]}')
-    for filename in os.listdir('./extensions'):
+    for filename in os.listdir(os.path.dirname(os.path.abspath(__file__)) + '/extensions'):
         if filename.endswith('.py'):
             bot.load_extension(f'extensions.{filename[:-3]}')
             print(f'Loaded extensions.{filename[:-3]}')
