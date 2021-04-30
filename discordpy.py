@@ -3,6 +3,7 @@
 import os
 import time
 import discord
+import pathlib
 
 from discord.ext import commands
 
@@ -35,7 +36,7 @@ async def on_message(msg):
 
 
 if __name__ == '__main__':
-    for filename in os.listdir('./cogs'):
+    for filename in os.listdir(os.path.dirname(os.path.abspath(__file__)) + '/cogs'):
         if filename.endswith('.py'):
             bot.load_extension(f'cogs.{filename[:-3]}')
             print(f'Loaded cogs.{filename[:-3]}')
