@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 import requests
 import json
-import datetime
+import datetime as dt
 
 
 @commands.command(help='Display Anilist user information')
@@ -49,10 +49,10 @@ async def anilist(ctx, username):
     response_data = json.loads(response.text)
 
     if response_data['data']['User'] is None:
-        print("Invalid username")
+        print('Invalid username')
         return
 
-    embed = discord.Embed(type='rich', title=f'{username}\'s Anilist profile',
+    embed = discord.Embed(type='rich', title=f"{username}'s Anilist profile",
                           url=f'https://anilist.co/user/{username}')
 
     user_favorites = response_data['data']['User']['favourites']['anime']['nodes']
@@ -99,9 +99,9 @@ async def anilist(ctx, username):
     response_activity = requests.post(url, json={'query': query_activity, 'variables': variables_activity})
     response_data_activity = json.loads(response_activity.text)
     activity_time = response_data_activity['data']['Activity']['createdAt']
-    time_converted = datetime.datetime.fromtimestamp(activity_time)
+    time_string = dt.datetime.fromtimestamp(activity_time).strftime('%Y/%m/%d, %H:%M')
 
-    embed.add_field(name=':busts_in_silhouette: Last Activity', value=time_converted)
+    embed.add_field(name=':busts_in_silhouette: Last Activity', value=time_string)
 
     await ctx.channel.send(embed=embed)
 
