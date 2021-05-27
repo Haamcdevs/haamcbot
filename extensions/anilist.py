@@ -21,7 +21,10 @@ async def anilist(ctx, username):
     if user_favorites:
         embed.description = '**Top 3 favorite anime:**\n'
         for favorite in user_favorites:
-            embed.description += f"[{favorite['title']['english']}]({favorite['siteUrl']})\n"
+            title = favorite['title']['english']
+            if title is None:
+                title = favorite['title']['romaji']
+            embed.description += f"[{title}]({favorite['siteUrl']})\n"
 
     user_statistics = response_data['data']['User']['statistics']['anime']
     status_counts = {"CURRENT":     (0, ':green_heart: Watching'),
@@ -95,6 +98,7 @@ async def request_user_data(username):
             nodes {
               title {
                 english
+                romaji
               }
               siteUrl
             }
