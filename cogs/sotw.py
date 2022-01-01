@@ -94,6 +94,16 @@ class Sotw(commands.Cog):
     @staticmethod
     def get_week_number():
         d = datetime.datetime.today()
+        if d.weekday() == 6:
+            d += datetime.timedelta(days=1)
+        number = datetime.date(d.year, d.month, d.day).isocalendar()[1]
+        return number
+
+    @staticmethod
+    def get_previous_week_number():
+        d = datetime.datetime.today()
+        if d.weekday() != 6:
+            d -= datetime.timedelta(days=7)
         number = datetime.date(d.year, d.month, d.day).isocalendar()[1]
         return number
 
@@ -116,7 +126,7 @@ class Sotw(commands.Cog):
 
     async def forum(self, nominations: List[SotwNomination]):
         msg = '```'
-        msg += nominations[0].get_winner_text(self.get_week_number())
+        msg += nominations[0].get_winner_text(self.get_previous_week_number())
         msg += '[spoiler]'
         for n in nominations:
             msg += n.get_bbcode()
@@ -164,7 +174,7 @@ class Sotw(commands.Cog):
         channel = next(ch for ch in user.guild.channels if ch.id == config.channel['sotw'])
         nominations = await self.get_ranked_nominations(ctx)
 
-        # Check if we have enough nominations and if we have a solid win 
+        # Check if we have enough nominations and if we have a solid win
         if len(nominations) < 2:
             return await ctx.channel.send(':x: Niet genoeg nominations')
         if nominations[0].votes == nominations[1].votes:
@@ -176,7 +186,7 @@ class Sotw(commands.Cog):
 
         # Send the win message
         await channel.send(
-            f":trophy: De winnaar van week {self.get_week_number() - 1} is: "
+            f":trophy: De winnaar van week {self.get_previous_week_number()} is: "
             f"{winner.get_field_value('artist')} - "
             f"{winner.get_field_value('title')} "
             f"({winner.get_field_value('anime')}) "
