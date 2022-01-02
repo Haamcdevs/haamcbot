@@ -97,7 +97,7 @@ class Sotw(commands.Cog):
         number = datetime.date(d.year, d.month, d.day).isocalendar()[1]
         return number
     
-        # Get NEXST week number
+        # Get nexst week number
     @staticmethod
     def get_week_number_nexst():
         d = datetime.datetime.today() + datetime.timedelta(days=7)
