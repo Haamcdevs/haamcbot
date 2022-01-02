@@ -97,9 +97,9 @@ class Sotw(commands.Cog):
         number = datetime.date(d.year, d.month, d.day).isocalendar()[1]
         return number
     
-        # Get nexst week number
+        # Get next week number
     @staticmethod
-    def get_week_number_nexst():
+    def get_week_number_next():
         d = datetime.datetime.today() + datetime.timedelta(days=7)
         number = datetime.date(d.year, d.month, d.day).isocalendar()[1]
         return number
@@ -192,7 +192,7 @@ class Sotw(commands.Cog):
         # Send the start of the new nomination week
         await channel.send(
             f":musical_note: :musical_note: Bij deze zijn de nominaties voor week"
-            f" {self.get_week_number_nexst()} geopend! :musical_note: :musical_note:\n"
+            f" {self.get_week_number_next()} geopend! :musical_note: :musical_note:\n"
             f"Nomineer volgens onderstaande template (kopieer en plak deze, en zet er dan de gegevens in):\n"
             f"```\n"
             f"artist: \n"
