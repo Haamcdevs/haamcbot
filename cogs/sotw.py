@@ -96,6 +96,13 @@ class Sotw(commands.Cog):
         d = datetime.datetime.today()
         number = datetime.date(d.year, d.month, d.day).isocalendar()[1]
         return number
+    
+        # Get NEXST week number
+    @staticmethod
+    def get_week_number_nexst():
+        d = datetime.datetime.today() + datetime.timedelta(days=7)
+        number = datetime.date(d.year, d.month, d.day).isocalendar()[1]
+        return number
 
     @commands.group(name='sotw', invoke_without_commands=True, help='Song of the week')
     async def sotw(self, ctx):
@@ -176,7 +183,7 @@ class Sotw(commands.Cog):
 
         # Send the win message
         await channel.send(
-            f":trophy: De winnaar van week {self.get_week_number() - 1} is: "
+            f":trophy: De winnaar van week {self.get_week_number()} is: "
             f"{winner.get_field_value('artist')} - "
             f"{winner.get_field_value('title')} "
             f"({winner.get_field_value('anime')}) "
@@ -185,7 +192,7 @@ class Sotw(commands.Cog):
         # Send the start of the new nomination week
         await channel.send(
             f":musical_note: :musical_note: Bij deze zijn de nominaties voor week"
-            f" {self.get_week_number()} geopend! :musical_note: :musical_note:\n"
+            f" {self.get_week_number_nexst()} geopend! :musical_note: :musical_note:\n"
             f"Nomineer volgens onderstaande template (kopieer en plak deze, en zet er dan de gegevens in):\n"
             f"```\n"
             f"artist: \n"
