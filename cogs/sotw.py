@@ -90,15 +90,16 @@ class Sotw(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    # Get week number
+    # Get current week number except on a Sunday when it's the next week number
     @staticmethod
-    def get_week_number():
+    def get_current_week_number():
         d = datetime.datetime.today()
         if d.weekday() == 6:
             d += datetime.timedelta(days=1)
         number = datetime.date(d.year, d.month, d.day).isocalendar()[1]
         return number
 
+    # Get previous week number except on a Sunday when it's the current week number
     @staticmethod
     def get_previous_week_number():
         d = datetime.datetime.today()
@@ -195,7 +196,7 @@ class Sotw(commands.Cog):
         # Send the start of the new nomination week
         await channel.send(
             f":musical_note: :musical_note: Bij deze zijn de nominaties voor week"
-            f" {self.get_week_number()} geopend! :musical_note: :musical_note:\n"
+            f" {self.get_current_week_number()} geopend! :musical_note: :musical_note:\n"
             f"Nomineer volgens onderstaande template (kopieer en plak deze, en zet er dan de gegevens in):\n"
             f"```\n"
             f"artist: \n"
