@@ -84,7 +84,7 @@ class JoinableMessage:
         embed.add_field(name='studio', value=', '.join([stu['name'] for stu in anime['studios']]) or '-')
         embed.add_field(name='datum', value=anime['aired']['string'])
         embed.add_field(name='genres'.ljust(122) + "ᅠ",
-                        value=', '.join([gen['name'] for gen in anime['genres']]),
+                        value=', '.join([gen['name'] for gen in anime['genres']] or '-'),
                         inline=False)
         embed.add_field(name='channel', value=channel.mention)
         embed.add_field(name='kijkers', value=str(members))
