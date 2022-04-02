@@ -81,7 +81,7 @@ class JoinableMessage:
         embed.set_author(name=anime['title'], icon_url='https://i.imgur.com/pcdrHvS.png', url=anime['url'])
         embed.set_footer(text='Druk op de reactions om te joinen / leaven')
         embed.set_thumbnail(url=anime['image_url'])
-        embed.add_field(name='studio', value=', '.join([stu['name'] for stu in anime['studios']]))
+        embed.add_field(name='studio', value=', '.join([stu['name'] for stu in anime['studios']]) or '-')
         embed.add_field(name='datum', value=anime['aired']['string'])
         embed.add_field(name='genres'.ljust(122) + "ᅠ",
                         value=', '.join([gen['name'] for gen in anime['genres']]),
