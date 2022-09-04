@@ -20,7 +20,7 @@ async def export(ctx, channel_id: int = 0):
 
     messageswithReactions = list(filter(
         lambda o: len(o.reactions) > 0,
-        await channel.history(limit=100).flatten() 
+        [message async for message in channel.history(limit=100)]
     ))
 
     if not (messageswithReactions):

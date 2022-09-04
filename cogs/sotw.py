@@ -1,5 +1,6 @@
 import re
 import asyncio
+import logging
 import datetime
 import operator
 from typing import List
@@ -20,6 +21,7 @@ database = mysql.connector.connect(
 
 class SotwNomination(object):
     def __init__(self, message: discord.message):
+        print(repr(message))
         self.message = message
         try:
             self.votes = message.reactions[0].count - 1
@@ -27,11 +29,14 @@ class SotwNomination(object):
             self.votes = 0
 
     def get_field_value(self, field):
+        logging.info(self.message)
         regex = rf"{field}\:([^\n]+)"
-        match = re.search(regex, self.message.content, re.IGNORECASE | re.MULTILINE)
+        content = self.message.content
+        match = re.search(regex, content, re.IGNORECASE | re.MULTILINE)
         if match:
             return match.group(1).strip()
         else:
+            logging.critical(f"Could not find field {field} in {content}")
             return None
 
     def get_username(self):
@@ -42,10 +47,12 @@ class SotwNomination(object):
 
     def get_youtube_code(self):
         regex = rf"([\w-]*)$"
-        match = re.search(regex, self.get_field_value('url'), re.IGNORECASE | re.MULTILINE)
+        url = self.get_field_value('url')
+        match = re.search(regex, url, re.IGNORECASE | re.MULTILINE)
         if match:
             return match.group(1)
         else:
+            logging.critical(f"Could not find youtube code in {url}")
             return None
 
     def get_yt_url(self):
@@ -116,7 +123,7 @@ class Sotw(commands.Cog):
         user = ctx.message.author
         channel = next(ch for ch in user.guild.channels if ch.id == config.channel['sotw'])
         # Get history of channel since last message from the bot
-        messages = await channel.history(limit=100).flatten()
+        messages = [message async for message in channel.history(limit=100)]
         nominations = []
         for msg in messages:
             if msg.author.bot:

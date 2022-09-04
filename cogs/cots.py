@@ -102,7 +102,7 @@ class Cots(commands.Cog):
     async def get_ranked_nominations(self, ctx):
         user = ctx.message.author
         channel = next(ch for ch in user.guild.channels if ch.id == config.channel['cots'])
-        messages = await channel.history(limit=100).flatten()
+        messages = [message async for message in channel.history(limit=100)]
         nominations = []
         for msg in messages:
             if msg.author.bot:
