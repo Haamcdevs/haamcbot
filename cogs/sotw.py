@@ -1,6 +1,5 @@
 import re
 import asyncio
-import logging
 import datetime
 import operator
 from typing import List
@@ -21,7 +20,6 @@ database = mysql.connector.connect(
 
 class SotwNomination(object):
     def __init__(self, message: discord.message):
-        print(repr(message))
         self.message = message
         try:
             self.votes = message.reactions[0].count - 1
@@ -29,14 +27,12 @@ class SotwNomination(object):
             self.votes = 0
 
     def get_field_value(self, field):
-        logging.info(self.message)
         regex = rf"{field}\:([^\n]+)"
         content = self.message.content
         match = re.search(regex, content, re.IGNORECASE | re.MULTILINE)
         if match:
             return match.group(1).strip()
         else:
-            logging.critical(f"Could not find field {field} in {content}")
             return None
 
     def get_username(self):
@@ -52,7 +48,6 @@ class SotwNomination(object):
         if match:
             return match.group(1)
         else:
-            logging.critical(f"Could not find youtube code in {url}")
             return None
 
     def get_yt_url(self):
