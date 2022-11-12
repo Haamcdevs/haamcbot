@@ -23,5 +23,5 @@ async def credits(ctx):
     print(f"{ctx.author} showed the bot credits <3")
 
 
-def setup(bot):
+async def setup(bot):
     bot.add_command(credits)

@@ -56,5 +56,5 @@ async def figure(ctx, *search):
 
     await ctx.send("Sorry, daar ging iets fout!")
 
-def setup(bot):
+async def setup(bot):
     bot.add_command(figure)

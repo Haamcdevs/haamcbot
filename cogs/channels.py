@@ -272,5 +272,5 @@ class Channels(commands.Cog):
         print(f'user {ctx.author} restored {channel}')
 
 
-def setup(bot):
-    bot.add_cog(Channels(bot))
+async def setup(bot):
+    await bot.add_cog(Channels(bot))

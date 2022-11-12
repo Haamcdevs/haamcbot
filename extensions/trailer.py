@@ -28,5 +28,5 @@ async def trailer(ctx, *search):
     await ctx.channel.send(f":x: No trailer available for **{anime['title']}**")
 
 
-def setup(bot):
+async def setup(bot):
     bot.add_command(trailer)

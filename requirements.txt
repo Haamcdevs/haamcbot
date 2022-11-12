@@ -1,10 +1,9 @@
-aiohttp==3.6.2
 async-timeout==3.0.1
 attrs==19.3.0
 CacheControl==0.12.6
 certifi==2020.4.5.1
 chardet==3.0.4
-discord.py==1.7.3
+discord.py==2.1.0
 dnspython==1.16.0
 idna==2.9
 jikanpy==3.4.2

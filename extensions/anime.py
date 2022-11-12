@@ -42,5 +42,5 @@ async def anime(ctx, *search):
     await ctx.channel.send(embed=embed)
 
 
-def setup(bot):
+async def setup(bot):
     bot.add_command(anime)

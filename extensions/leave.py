@@ -24,5 +24,5 @@ async def leave(ctx):
     print(f'{user} left channel {channel} using the leave command')
 
 
-def setup(bot):
+async def setup(bot):
     bot.add_command(leave)

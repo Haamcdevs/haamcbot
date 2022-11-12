@@ -118,5 +118,5 @@ async def request_user_data(username):
     return response_data
 
 
-def setup(bot):
+async def setup(bot):
     bot.add_command(anilist)

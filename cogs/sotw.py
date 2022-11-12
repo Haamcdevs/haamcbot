@@ -232,5 +232,5 @@ class Sotw(commands.Cog):
         database.commit()
 
 
-def setup(bot):
-    bot.add_cog(Sotw(bot))
+async def setup(bot):
+    await bot.add_cog(Sotw(bot))

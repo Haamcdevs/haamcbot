@@ -115,5 +115,5 @@ class Bikkelpunt(commands.Cog):
         await ctx.channel.send(self.utils.get_top_10_message())
 
 
-def setup(bot):
-    bot.add_cog(Bikkelpunt(bot))
+async def setup(bot):
+    await bot.add_cog(Bikkelpunt(bot))

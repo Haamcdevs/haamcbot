@@ -10,12 +10,13 @@ from discord.ext import commands
 import config
 
 intents = discord.Intents.default()
-bot = commands.Bot(command_prefix=config.commandchar, description='Description', intents=intents.all())
+bot = commands.Bot(command_prefix='/', description='Description', intents=intents.all())
 
 
 @bot.event
 async def on_ready():
     print(f'- Logging in: {bot.user.name} / {bot.user.id} -')
+
 
 @bot.event
 async def on_message(msg):
@@ -35,13 +36,17 @@ async def on_message(msg):
     await bot.process_commands(msg)
 
 
-if __name__ == '__main__':
+@bot.event
+async def setup_hook():
     for filename in os.listdir(os.path.dirname(os.path.abspath(__file__)) + '/cogs'):
         if filename.endswith('.py'):
-            bot.load_extension(f'cogs.{filename[:-3]}')
+            await bot.load_extension(f'cogs.{filename[:-3]}')
             print(f'Loaded cogs.{filename[:-3]}')
     for filename in os.listdir(os.path.dirname(os.path.abspath(__file__)) + '/extensions'):
         if filename.endswith('.py'):
-            bot.load_extension(f'extensions.{filename[:-3]}')
+            await bot.load_extension(f'extensions.{filename[:-3]}')
             print(f'Loaded extensions.{filename[:-3]}')
+
+
+if __name__ == '__main__':
     bot.run(config.authkey)

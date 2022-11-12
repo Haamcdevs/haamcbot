@@ -32,5 +32,5 @@ async def userexport(ctx, channel_id: int = 0):
     print(f"{ctx.author} exported users for channel {channel}")
 
 
-def setup(bot):
+async def setup(bot):
     bot.add_command(userexport)
