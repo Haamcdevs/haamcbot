@@ -95,7 +95,7 @@ class Cots(commands.Cog):
         with open('./var/cots_season', 'r') as fd:
             return fd.read()
 
-    @commands.group(name='cots', invoke_without_command=True, help='Character of the Season')
+    @commands.hybrid_group(name='cots', invoke_without_command=True, help='Character of the Season')
     async def cots(self, ctx):
         return
 

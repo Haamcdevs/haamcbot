@@ -7,7 +7,7 @@ from discord.ext import commands
 uptime = time.time()
 
 
-@commands.command(help='Shows bot credits')
+@commands.hybrid_command(help='Shows bot credits')
 async def credits(ctx):
     author = 'Haamc devs: https://github.com/Haamcdevs'
     v = discord.version_info

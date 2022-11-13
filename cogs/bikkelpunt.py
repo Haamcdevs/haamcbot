@@ -81,7 +81,7 @@ class Bikkelpunt(commands.Cog):
         self.bot = bot
         self.utils = BikkelpuntUtils()
 
-    @commands.group(name='bikkel', invoke_without_commands=False, help='Bikkel punten')
+    @commands.hybrid_group(name='bikkel', invoke_without_commands=False, help='Bikkel punten')
     async def bikkel(self, ctx):
         return
 

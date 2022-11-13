@@ -110,7 +110,7 @@ class Sotw(commands.Cog):
         number = datetime.date(d.year, d.month, d.day).isocalendar()[1]
         return number
 
-    @commands.group(name='sotw', invoke_without_commands=True, help='Song of the week')
+    @commands.hybrid_group(name='sotw', invoke_without_commands=True, help='Song of the week')
     async def sotw(self, ctx):
         return
 

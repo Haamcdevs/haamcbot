@@ -2,7 +2,7 @@ from discord.ext import commands
 from discord.member import Member
 
 
-@commands.command(help='Leave a joinable channel', category='Channels')
+@commands.hybrid_command(help='Leave a joinable channel', category='Channels')
 async def leave(ctx):
     # Check that the user has a member read override
     user = ctx.message.author

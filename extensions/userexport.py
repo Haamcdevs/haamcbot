@@ -8,7 +8,7 @@ from discord.member import Member
 import config
 
 
-@commands.command(help='Export a .csv of users who joined a joinable channel')
+@commands.hybrid_command(help='Export a .csv of users who joined a joinable channel')
 @commands.has_role(config.role['global_mod'])
 async def userexport(ctx, channel_id: int = 0):
     try:

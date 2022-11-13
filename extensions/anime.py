@@ -16,8 +16,8 @@ session = CacheControl(requests.Session(), heuristic=expires, cache=FileCache(co
 jikan = Jikan(session=session)
 
 
-@commands.command(help='Show anime information')
-async def anime(ctx, *search):
+@commands.hybrid_command(help='Show anime information')
+async def anime(ctx, search):
     search = jikan.search('anime', ' '.join(search))
     if len(search['results']) == 0:
         return await ctx.channel.send(":x: Anime not found")

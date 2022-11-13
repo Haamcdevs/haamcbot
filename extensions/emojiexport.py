@@ -7,7 +7,7 @@ from discord.ext import commands
 import config
 
 
-@commands.command(help='Export a .csv of messages with their emoji count')
+@commands.hybrid_command(help='Export a .csv of messages with their emoji count')
 @commands.has_role(config.role['global_mod'])
 async def export(ctx, channel_id: int = 0):
     try:

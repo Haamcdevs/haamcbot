@@ -5,7 +5,7 @@ import json
 import datetime as dt
 
 
-@commands.command(help='Display Anilist user information')
+@commands.hybrid_command(help='Display Anilist user information')
 async def anilist(ctx, username):
     response_data = await request_user_data(username=username)
     if response_data['data']['User'] is None:

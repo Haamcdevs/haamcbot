@@ -143,7 +143,7 @@ class Channels(commands.Cog):
         await msg.add_reaction('⏹')
         return msg
 
-    @commands.command(pass_context=True, help='Create a joinable anime channel')
+    @commands.hybrid_command(pass_context=True, help='Create a joinable anime channel')
     @commands.has_any_role(config.role['global_mod'], config.role['anime_mod'])
     async def animechannel(self, ctx, channel_name, mal_anime_url):
         print(f'{ctx.author} creates anime channel {channel_name}')
@@ -170,7 +170,7 @@ class Channels(commands.Cog):
         msg = await newchan.send(welcomemsg)
         await msg.pin()
 
-    @commands.command(pass_context=True, help='Create a simple joinable channel (use quotes for description)')
+    @commands.hybrid_command(pass_context=True, help='Create a simple joinable channel (use quotes for description)')
     @commands.has_role(config.role['global_mod'])
     async def simplechannel(self, ctx, categoryid, name, description='To be announced'):
         print(f'{ctx.author} creates simple channel {name} in category {categoryid}')
@@ -260,7 +260,7 @@ class Channels(commands.Cog):
         await msg.delete()
         print(f'user {payload.member} deleted {joinable_channel}')
 
-    @commands.command(pass_context=True, help='Restore a simple channel join message')
+    @commands.hybrid_command(pass_context=True, help='Restore a simple channel join message')
     @commands.has_role(config.role['global_mod'])
     async def rechannel(self, ctx, channelid):
         channel = await self.bot.fetch_channel(channelid)
