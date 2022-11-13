@@ -2,7 +2,7 @@ import re
 
 import requests
 from discord.ext import commands
-from jikanpy import Jikan, APIException
+from jikanpy import Jikan
 from cachecontrol import CacheControl
 from cachecontrol.heuristics import ExpiresAfter
 from cachecontrol.caches.file_cache import FileCache

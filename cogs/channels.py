@@ -8,13 +8,13 @@ from jikanpy import Jikan
 from cachecontrol import CacheControl
 from cachecontrol.heuristics import ExpiresAfter
 from cachecontrol.caches.file_cache import FileCache
+from util.confirm import Confirm
 
 import config
 
 expires = ExpiresAfter(days=1)
 session = CacheControl(requests.Session(), heuristic=expires, cache=FileCache(config.cache_dir))
 jikan = Jikan(session=session)
-
 
 class JoinableMessage:
     def __init__(self, message: discord.message, bot):
@@ -160,7 +160,6 @@ class Channels(commands.Cog):
         )
         embed = JoinableMessage.create_anime_embed(newchan, maldata, 0)
         await self._joinmessage(ctx.channel, embed)
-        await ctx.message.delete()
         welcomemsg = f"Hallo iedereen! In deze channel kijken we naar **{maldata['title']}**.\nMAL: {maldata['url']}"
         if trailer := maldata['trailer_url']:
             if 'embed' in trailer:
@@ -172,7 +171,7 @@ class Channels(commands.Cog):
 
     @commands.hybrid_command(pass_context=True, help='Create a simple joinable channel (use quotes for description)')
     @commands.has_role(config.role['global_mod'])
-    async def simplechannel(self, ctx, categoryid, name, description='To be announced'):
+    async def simplechannel(self, ctx, categoryid, name, description):
         print(f'{ctx.author} creates simple channel {name} in category {categoryid}')
         guild = ctx.message.guild
         try:
@@ -190,7 +189,6 @@ class Channels(commands.Cog):
         )
         embed = JoinableMessage.create_simple_embed(newchan, 0)
         await self._joinmessage(ctx.channel, embed)
-        await ctx.message.delete()
 
     @commands.Cog.listener(name='on_raw_reaction_add')
     async def join(self, payload):
@@ -268,7 +266,6 @@ class Channels(commands.Cog):
         message = await self._joinmessage(ctx.channel, embed)
         message = JoinableMessage(message, self.bot)
         await message.update_members()
-        await ctx.message.delete()
         print(f'user {ctx.author} restored {channel}')
 
 

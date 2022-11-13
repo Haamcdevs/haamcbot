@@ -2,7 +2,6 @@ from datetime import datetime, time
 
 import mysql.connector
 import pytz
-import discord
 from discord.ext import commands
 
 import config

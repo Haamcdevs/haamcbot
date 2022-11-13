@@ -4,7 +4,7 @@ import textwrap
 import discord
 import requests
 from discord.ext import commands
-from jikanpy import Jikan, APIException
+from AnilistPython import Anilist
 from cachecontrol import CacheControl
 from cachecontrol.heuristics import ExpiresAfter
 from cachecontrol.caches.file_cache import FileCache
@@ -13,32 +13,30 @@ import config
 
 expires = ExpiresAfter(days=1)
 session = CacheControl(requests.Session(), heuristic=expires, cache=FileCache(config.cache_dir))
-jikan = Jikan(session=session)
-
 
 @commands.hybrid_command(help='Show anime information')
-async def anime(ctx, search):
-    search = jikan.search('anime', ' '.join(search))
-    if len(search['results']) == 0:
-        return await ctx.channel.send(":x: Anime not found")
-    anime_id = search['results'][0]['mal_id']
-    anime = jikan.anime(anime_id)
-    description_parts = textwrap.wrap(anime['synopsis'], 1000)
-    genres = [g['name'] for g in anime['genres']]
-    embed = discord.Embed(type='rich', title=anime['title'])
-    embed.set_thumbnail(url=anime['image_url'])
+async def anime(interaction: discord.Interaction, search):
+    anilist = Anilist()
+    anime_id = anilist.get_anime_id(search)
+    ctx = interaction
+    if(anime_id == -1):
+        ctx.channel.send_help('test')
+        return
+    anime = anilist.get_anime(search)
+    description_parts = textwrap.wrap(anime['desc'], 1000)
+    embed = discord.Embed(type='rich', title=anime['name_romaji'])
+    embed.set_thumbnail(url=anime['cover_image'])
     embed.set_author(icon_url='https://i.imgur.com/pcdrHvS.png', name="")
     for i, desc in enumerate(description_parts):
-        embed.add_field(name=f'Description', value=desc, inline=False)
-    embed.add_field(name=f'Episodes', value=anime['episodes'])
-    embed.add_field(name=f'Status', value=anime['status'])
-    embed.add_field(name=f'Score', value=anime['score'])
-    embed.add_field(name=f'Popularity', value=anime['popularity'])
-    embed.add_field(name=f'Broadcast', value=anime['broadcast'])
-    embed.add_field(name=f'Premiered', value=anime['premiered'])
-    embed.add_field(name=f'Source', value=anime['source'])
-    embed.add_field(name=f'Genres', value=', '.join(genres))
-    embed.add_field(name=f'Links', value=f"[MAL]({anime['url']})")
+        embed.add_field(name=f'...', value=desc.replace('<br>','\n'), inline=False)
+    embed.add_field(name=f'Episodes', value=anime['airing_episodes'])
+    embed.add_field(name=f'Status', value=anime['airing_status'])
+    embed.add_field(name=f'Score', value=anime['average_score'])
+    if anime['next_airing_ep'] != None:
+        airing_timestamp = anime['next_airing_ep']['airingAt']
+        embed.add_field(name=f'Broadcast', value=f"<t:{airing_timestamp}>")
+    embed.add_field(name=f'Premiered', value=anime['starting_time'])
+    embed.add_field(name=f'Links', value=f"[AniList](https://anilist.co/anime/{anime_id})")
     await ctx.channel.send(embed=embed)
 
 

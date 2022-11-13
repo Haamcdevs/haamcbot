@@ -7,7 +7,6 @@ async def leave(ctx):
     # Check that the user has a member read override
     user = ctx.message.author
     channel = ctx.message.channel
-    await ctx.message.delete()
     is_joined = bool([
         o for o in channel.overwrites.items() if
         type(o[0]) is Member and o[0].id == user.id and o[1].read_messages is True

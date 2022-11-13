@@ -3,10 +3,8 @@
 import os
 import time
 import discord
-import pathlib
 
 from discord.ext import commands
-from discord import app_commands
 
 import config
 
