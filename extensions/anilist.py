@@ -49,6 +49,7 @@ async def anilist(ctx, username):
     embed.add_field(name=':busts_in_silhouette: Last Activity', value=time_string)
 
     await ctx.channel.send(embed=embed)
+    await ctx.interaction.response.send_message('Done', ephemeral=True)
 
 
 async def request_activity_data(userid):

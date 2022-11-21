@@ -8,7 +8,7 @@ from jikanpy import Jikan
 from cachecontrol import CacheControl
 from cachecontrol.heuristics import ExpiresAfter
 from cachecontrol.caches.file_cache import FileCache
-from util.confirm import Confirm
+from discord.ext.commands import Context
 
 import config
 
@@ -143,8 +143,8 @@ class Channels(commands.Cog):
         await msg.add_reaction('⏹')
         return msg
 
-    @commands.hybrid_command(pass_context=True, help='Create a joinable anime channel')
-    @commands.has_any_role(config.role['global_mod'], config.role['anime_mod'])
+    #@commands.hybrid_command(pass_context=True, help='Create a joinable anime channel')
+    #@commands.has_any_role(config.role['global_mod'], config.role['anime_mod'])
     async def animechannel(self, ctx, channel_name, mal_anime_url):
         print(f'{ctx.author} creates anime channel {channel_name}')
         guild = ctx.message.guild
@@ -171,7 +171,7 @@ class Channels(commands.Cog):
 
     @commands.hybrid_command(pass_context=True, help='Create a simple joinable channel (use quotes for description)')
     @commands.has_role(config.role['global_mod'])
-    async def simplechannel(self, ctx, categoryid, name, description):
+    async def simplechannel(self, ctx: Context, categoryid, name, description):
         print(f'{ctx.author} creates simple channel {name} in category {categoryid}')
         guild = ctx.message.guild
         try:
@@ -179,7 +179,7 @@ class Channels(commands.Cog):
         except StopIteration:
             await ctx.channel.send(f':x: Cant find category <#{categoryid}> :thinking:')
             return
-        newchan = await guild.create_text_channel(
+        new_channel = await guild.create_text_channel(
             name=name,
             category=category,
             topic=description,
@@ -187,8 +187,9 @@ class Channels(commands.Cog):
             reason=f"Aangevraagd door {ctx.author}",
             overwrites=self.get_overwites(guild, category)
         )
-        embed = JoinableMessage.create_simple_embed(newchan, 0)
+        embed = JoinableMessage.create_simple_embed(new_channel, 0)
         await self._joinmessage(ctx.channel, embed)
+        await ctx.interaction.response.send_message(f'Created channel <#{new_channel.id}> in <#{new_channel.category.id}>')
 
     @commands.Cog.listener(name='on_raw_reaction_add')
     async def join(self, payload):
@@ -267,6 +268,7 @@ class Channels(commands.Cog):
         message = JoinableMessage(message, self.bot)
         await message.update_members()
         print(f'user {ctx.author} restored {channel}')
+        await ctx.interaction.response.send_message('Done', ephemeral=True)
 
 
 async def setup(bot):

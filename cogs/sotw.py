@@ -178,14 +178,13 @@ class Sotw(commands.Cog):
 
         # Check if we have enough nominations and if we have a solid win
         if len(nominations) < 2:
-            return await ctx.channel.send(':x: Niet genoeg nominations')
+            return await ctx.interaction.response.send_message(':x: Niet genoeg nominations', ephemeral=True)
         if nominations[0].votes == nominations[1].votes:
-            return await ctx.channel.send(':x: Het is een gelijke stand')
+            return await ctx.interaction.response.send_message(':x: Het is een gelijke stand', ephemeral=True)
 
         # Build a dict of the winner for the win message and database insertion
         winner = nominations[0]
         await ctx.channel.send(await self.forum(nominations))
-
         # Send the win message
         await channel.send(
             f":trophy: De winnaar van week {self.get_previous_week_number()} is: "
@@ -229,6 +228,7 @@ class Sotw(commands.Cog):
 
         # Commit change
         database.commit()
+        await ctx.interaction.response.send_message('Done', ephemeral=True)
 
 
 async def setup(bot):

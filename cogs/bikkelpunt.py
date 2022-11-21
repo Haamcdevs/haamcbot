@@ -90,8 +90,9 @@ class Bikkelpunt(commands.Cog):
         # first check if the time is right before doing anything else
         check_time = self.utils.is_time_correct()
         if check_time is False:
-            return await ctx.channel.send(
-                f":last_quarter_moon_with_face: Echte bikkels leven tussen 03:00 en 05:00!"
+            return await ctx.interaction.response.send_message(
+                f":last_quarter_moon_with_face: Echte bikkels leven tussen 03:00 en 05:00!",
+                ephemeral=True
             )
         record = self.utils.get_existing_record(ctx.message.author.id)
         if record is None:
@@ -99,11 +100,12 @@ class Bikkelpunt(commands.Cog):
             record = self.utils.get_existing_record(ctx.message.author.id)
         else:
             if self.utils.has_cooldown(record):
-                return await ctx.channel.send(
-                    f":last_quarter_moon_with_face: Je hebt al gebikkelt vandaag, probeer het morgen nog eens"
+                return await ctx.interaction.response.send_message(
+                    f":last_quarter_moon_with_face: Je hebt al gebikkelt vandaag, probeer het morgen nog eens",
+                    ephemeral=True
                 )
         self.utils.update_bikkelpunt_record(ctx.message, record.get('points'))
-        await ctx.channel.send(
+        await ctx.interaction.response.send_message(
             f":last_quarter_moon_with_face: Je bent een echte bikkel! "
             f"**+1** (**{record.get('points') + 1}** punten totaal)"
         )
@@ -111,7 +113,7 @@ class Bikkelpunt(commands.Cog):
     @bikkel.command(help='Toon de top 10 bikkelpunten')
     async def ranking(self, ctx):
         database.reconnect()
-        await ctx.channel.send(self.utils.get_top_10_message())
+        await ctx.interaction.response.send_message(self.utils.get_top_10_message())
 
 
 async def setup(bot):

@@ -1,13 +1,14 @@
 import re
 
-from discord import ChannelType, TextStyle, ForumChannel, ForumTag
+from discord import ForumTag
 from discord.ext.commands import Context
 from AnilistPython import Anilist
 
 import config
 import discord
 from discord.ext import commands
-from discord.ui import Modal, TextInput, ChannelSelect
+from discord.ui import Modal, TextInput
+from util.html2md import html2md
 
 
 class AnimeForm(Modal):
@@ -28,12 +29,7 @@ class AnimeForm(Modal):
 
     async def on_submit(self, interaction: discord.Interaction):
         forum = interaction.guild.get_channel(config.channel["anime_forum"])
-        description = self.anime['desc'].replace('<br>', "\n")\
-            .replace('<b>', '**')\
-            .replace('</b>', '**')\
-            .replace('<i>', '*')\
-            .replace('</i>', '*')
-
+        description = html2md(self.anime['desc'])
         content = f'**description:** {description}\n**Start date:** {self.anime["starting_time"]}\n{self.anime["cover_image"]}\n<{self.anilist_link}>\n{self.youtube.value}'
         thread = await forum.create_thread(
             name=self.name.value,
@@ -43,19 +39,26 @@ class AnimeForm(Modal):
         tags = []
         filtered = filter(self.filter_tags, forum.available_tags)
         for tag in filtered:
+            if len(tags) >= 5:
+                break
             tags.append(tag)
         await thread[0].add_tags(*tags)
         await interaction.response.send_message(f'Created <#{thread[0].id}> in <#{forum.id}>')
 
 
 @commands.hybrid_command(help='Create an anime post')
-@commands.has_role(config.role['global_mod'])
+@commands.has_role(config.role['user'])
 async def animepost(ctx: Context, anilist_link):
-    anilist_id = re.search(r'anime/(\d+)', anilist_link)[1]
+    try:
+        anilist_id = re.search(r'anime/(\d+)', anilist_link)[1]
+    except TypeError:
+        await ctx.interaction.response.send_message(':x: Invalid anilist url', ephemeral=True)
+        return
     anilist = Anilist()
     anime = anilist.get_anime_with_id(anilist_id)
     modal = AnimeForm(anime, anilist_link)
     await ctx.interaction.response.send_modal(modal)
+    print(f'Created anime post for {modal.name} by {ctx.interaction.user.name}')
 
 
 async def setup(bot):

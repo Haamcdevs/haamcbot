@@ -34,8 +34,7 @@ async def anime(ctx: discord.ext.commands.context.Context, search):
     embed.add_field(name=f'Premiered', value=anime['starting_time'])
     embed.add_field(name=f'Links', value=f"[AniList](https://anilist.co/anime/{anime_id})")
     await ctx.channel.send(embed=embed)
-    print(ctx.interaction)
-    #await ctx.message.delete()
+    await ctx.interaction.response.send_message('Done', ephemeral=True)
 
 
 async def setup(bot):
