@@ -18,8 +18,8 @@ class AnimeForm(Modal):
         self.anime = anime
         #print(anime)
         self.anilist_link = anilist_link
-        self.name = TextInput(label='name', placeholder="https://www.youtube.com/watch?v=dQw4w9WgXcQ", required=True, default=self.name_preview[0:100])
-        self.youtube = TextInput(label='Youtube trailer link', placeholder="https://www.youtube.com/watch?v=dQw4w9WgXcQ", required=False)
+        self.name = TextInput(label='name', required=True, default=self.name_preview[0:100])
+        self.youtube = TextInput(label='Youtube trailer link', required=False)
 
         self.add_item(self.name)
         self.add_item(self.youtube)
