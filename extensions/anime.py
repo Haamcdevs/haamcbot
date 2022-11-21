@@ -15,13 +15,9 @@ expires = ExpiresAfter(days=1)
 session = CacheControl(requests.Session(), heuristic=expires, cache=FileCache(config.cache_dir))
 
 @commands.hybrid_command(help='Show anime information')
-async def anime(interaction: discord.Interaction, search):
+async def anime(ctx: discord.ext.commands.context.Context, search):
     anilist = Anilist()
     anime_id = anilist.get_anime_id(search)
-    ctx = interaction
-    if(anime_id == -1):
-        ctx.channel.send_help('test')
-        return
     anime = anilist.get_anime(search)
     description_parts = textwrap.wrap(anime['desc'], 1000)
     embed = discord.Embed(type='rich', title=anime['name_romaji'])
@@ -38,6 +34,8 @@ async def anime(interaction: discord.Interaction, search):
     embed.add_field(name=f'Premiered', value=anime['starting_time'])
     embed.add_field(name=f'Links', value=f"[AniList](https://anilist.co/anime/{anime_id})")
     await ctx.channel.send(embed=embed)
+    print(ctx.interaction)
+    #await ctx.message.delete()
 
 
 async def setup(bot):
