@@ -25,18 +25,32 @@ jikan = Jikan(session=session)
 
 class ChannelForm(Modal):
     def __init__(self, category_id: int):
-        super().__init__(title="Create a new joinable channel")  # Modal title
+        super().__init__(title="Welcome to Create-a-channel")  # Modal title
         self.category_id = category_id
 
-        self.name = TextInput(label="Name")
+        self.name = TextInput(label="Name", min_length=2, max_length=32)
         self.add_item(self.name)
 
-        self.description = TextInput(label="Description", style=TextStyle.long)
+        self.description = TextInput(label="Description", style=TextStyle.long, max_length=1024, required=False)
         self.add_item(self.description)
 
     async def on_submit(self, interaction: discord.Interaction):
-        category = interaction.guild.get_channel(int(self.category.value))
-        await interaction.response.send_message(f'Channel {self.name}, category: {category.name}, description {self.description}')
+        try:
+            category = next(cat for cat in interaction.guild.categories if cat.id == int(self.category_id))
+        except StopIteration:
+            await interaction.response.send_message(f':x: Cant find category <#{self.category_id}> :thinking:')
+            return
+        new_channel = await interaction.guild.create_text_channel(
+            name=self.name.value,
+            category=category,
+            topic=self.description.value,
+            position=len(category.channels),
+            reason=f"Aangevraagd door {interaction.user}",
+            overwrites=Channels.get_overwites(interaction.guild, category)
+        )
+        embed = JoinableMessage.create_simple_embed(new_channel, 0)
+        await Channels._joinmessage(interaction.channel, embed)
+        await interaction.response.send_message(f'Joinable channel <#{new_channel.id}> created', ephemeral=True)
 
 class JoinableMessage:
     def __init__(self, message: discord.message, bot):
@@ -165,56 +179,14 @@ class Channels(commands.Cog):
         await msg.add_reaction('⏹')
         return msg
 
-    #@commands.hybrid_command(pass_context=True, help='Create a joinable anime channel')
-    #@commands.has_any_role(config.role['global_mod'], config.role['anime_mod'])
-    async def animechannel(self, ctx, channel_name, mal_anime_url):
-        print(f'{ctx.author} creates anime channel {channel_name}')
-        guild = ctx.message.guild
-        category = next(cat for cat in guild.categories if cat.id == config.category['anime'])
-        maldata = JoinableMessage.get_anime_from_url(mal_anime_url)
-        newchan = await guild.create_text_channel(
-            name=channel_name,
-            category=category,
-            topic=f"{maldata['title']} || {maldata['url']}",
-            position=len(category.channels),
-            reason=f"Aangevraagd door {ctx.author}",
-            overwrites=self.get_overwites(guild, category)
-        )
-        embed = JoinableMessage.create_anime_embed(newchan, maldata, 0)
-        await self._joinmessage(ctx.channel, embed)
-        welcomemsg = f"Hallo iedereen! In deze channel kijken we naar **{maldata['title']}**.\nMAL: {maldata['url']}"
-        if trailer := maldata['trailer_url']:
-            if 'embed' in trailer:
-                trailer = f"https://www.youtube.com/watch?v={re.search('/embed/([^?]+)', trailer)[1]}"
-            welcomemsg += f'\nTrailer: {trailer}'
-        welcomemsg += f"\nMirai: `m.airing notify channel {maldata['title']}`"
-        msg = await newchan.send(welcomemsg)
-        await msg.pin()
-
     @commands.hybrid_command(pass_context=True, help='Create a simple joinable channel (use quotes for description)')
     @commands.has_role(config.role['global_mod'])
-    async def simplechannel(self, ctx: Context, category, name, description):
-        categoryid = int(category)
-        print(f'{ctx.author} creates simple channel {name} in category {categoryid}')
-        guild = ctx.message.guild
-        try:
-            category = next(cat for cat in guild.categories if cat.id == int(categoryid))
-        except StopIteration:
-            await ctx.channel.send(f':x: Cant find category <#{categoryid}> :thinking:')
-            return
-        new_channel = await guild.create_text_channel(
-            name=name,
-            category=category,
-            topic=description,
-            position=len(category.channels),
-            reason=f"Aangevraagd door {ctx.author}",
-            overwrites=self.get_overwites(guild, category)
-        )
-        embed = JoinableMessage.create_simple_embed(new_channel, 0)
-        await self._joinmessage(ctx.channel, embed)
-        await ctx.interaction.response.send_message(f'Created channel <#{new_channel.id}> in <#{new_channel.category.id}>')
+    async def joinable_channel(self, ctx: Context, category):
+        category_id = int(category)
+        modal = ChannelForm(category_id)
+        await ctx.interaction.response.send_modal(modal)
 
-    @simplechannel.autocomplete('category')
+    @joinable_channel.autocomplete('category')
     async def category_autocomplete(self, ctx: Context, current: str) -> List[Choice[str]]:
         return [
             Choice(name=category.name, value=f'{category.id}')
