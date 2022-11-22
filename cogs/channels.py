@@ -1,7 +1,11 @@
 import re
+from typing import List
+
 import requests
 
 import discord
+from discord import ChannelType
+from discord.app_commands import Choice
 from discord.ext import commands
 from discord.member import Member
 from jikanpy import Jikan
@@ -9,12 +13,30 @@ from cachecontrol import CacheControl
 from cachecontrol.heuristics import ExpiresAfter
 from cachecontrol.caches.file_cache import FileCache
 from discord.ext.commands import Context
+from discord.ui import Modal, TextInput
+from discord import ChannelType, TextStyle
 
 import config
 
 expires = ExpiresAfter(days=1)
 session = CacheControl(requests.Session(), heuristic=expires, cache=FileCache(config.cache_dir))
 jikan = Jikan(session=session)
+
+
+class ChannelForm(Modal):
+    def __init__(self, category_id: int):
+        super().__init__(title="Create a new joinable channel")  # Modal title
+        self.category_id = category_id
+
+        self.name = TextInput(label="Name")
+        self.add_item(self.name)
+
+        self.description = TextInput(label="Description", style=TextStyle.long)
+        self.add_item(self.description)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        category = interaction.guild.get_channel(int(self.category.value))
+        await interaction.response.send_message(f'Channel {self.name}, category: {category.name}, description {self.description}')
 
 class JoinableMessage:
     def __init__(self, message: discord.message, bot):
@@ -171,7 +193,8 @@ class Channels(commands.Cog):
 
     @commands.hybrid_command(pass_context=True, help='Create a simple joinable channel (use quotes for description)')
     @commands.has_role(config.role['global_mod'])
-    async def simplechannel(self, ctx: Context, categoryid, name, description):
+    async def simplechannel(self, ctx: Context, category, name, description):
+        categoryid = int(category)
         print(f'{ctx.author} creates simple channel {name} in category {categoryid}')
         guild = ctx.message.guild
         try:
@@ -190,6 +213,13 @@ class Channels(commands.Cog):
         embed = JoinableMessage.create_simple_embed(new_channel, 0)
         await self._joinmessage(ctx.channel, embed)
         await ctx.interaction.response.send_message(f'Created channel <#{new_channel.id}> in <#{new_channel.category.id}>')
+
+    @simplechannel.autocomplete('category')
+    async def category_autocomplete(self, ctx: Context, current: str) -> List[Choice[str]]:
+        return [
+            Choice(name=category.name, value=f'{category.id}')
+            for category in ctx.guild.categories if category.type == ChannelType.category
+        ]
 
     @commands.Cog.listener(name='on_raw_reaction_add')
     async def join(self, payload):
