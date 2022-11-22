@@ -179,7 +179,7 @@ class Channels(commands.Cog):
         await msg.add_reaction('⏹')
         return msg
 
-    @commands.hybrid_command(pass_context=True, help='Create a simple joinable channel (use quotes for description)')
+    @commands.hybrid_command(pass_context=True, help='Create a joinable channel')
     @commands.has_role(config.role['global_mod'])
     async def joinable_channel(self, ctx: Context, category):
         category_id = int(category)
@@ -190,7 +190,8 @@ class Channels(commands.Cog):
     async def category_autocomplete(self, ctx: Context, current: str) -> List[Choice[str]]:
         return [
             Choice(name=category.name, value=f'{category.id}')
-            for category in ctx.guild.categories if category.type == ChannelType.category
+            for category in ctx.guild.categories
+            if category.type == ChannelType.category and category.name.lower().__contains__(current.lower())
         ]
 
     @commands.Cog.listener(name='on_raw_reaction_add')
