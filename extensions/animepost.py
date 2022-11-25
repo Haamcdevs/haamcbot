@@ -42,6 +42,7 @@ class AnimeForm(Modal):
             reason=f"Anime thread created by {interaction.user.name}",
             applied_tags=tags
         )
+        await thread.message.pin()
         # Add notifications
         if self.anime is not None:
             self.airing.add_notifications_to_channel(thread[0].id, interaction.guild_id, self.anime)
