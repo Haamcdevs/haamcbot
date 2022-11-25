@@ -49,7 +49,7 @@ class Airing:
         for airdate in anime['airdates']:
             self.store_notification(
                 anime['id'],
-                airdate['time'],
+                airdate['episode'],
                 guild_id,
                 channel_id,
                 anime['name'],
