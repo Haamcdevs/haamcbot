@@ -14,7 +14,7 @@ from util.airing import Airing
 
 class AnimeForm(Modal):
     def __init__(self, anime, anilist_link):
-        super().__init__(title=f'Create post for {anime["name"]}'[0:45])  # Modal title
+        super().__init__(title=f'Maak post aan voor {anime["name"]}'[0:45])  # Modal title
         self.anime = anime
         self.airing = Airing()
         self.anilist_link = anilist_link
