@@ -29,7 +29,7 @@ class AnimeForm(Modal):
 
     async def on_submit(self, interaction: discord.Interaction):
         forum = interaction.guild.get_channel(config.channel["anime_forum"])
-        content = f'**description:** {self.anime["description"]}\n**Start date:** {self.anime["starts_at"]}\n{self.anime["image"]}\n<{self.anilist_link}>'
+        content = f'**Description:** {self.anime["description"]}\n**Start date:** {self.anime["starts_at"]}\n{self.anime["image"]}\n<{self.anilist_link}>'
         tags = []
         filtered = filter(self.filter_tags, forum.available_tags)
         for tag in filtered:

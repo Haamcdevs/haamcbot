@@ -50,14 +50,14 @@ class Notifications(commands.Cog):
         self.airing.add_notifications_to_channel(channel_id, guild_id, anime)
         episode_count = len(anime['airdates'])
         anime_name = anime['name']
-        await ctx.interaction.response.send_message(f'Added **{episode_count}** upcoming airing notifications for **{anime_name}**')
+        await ctx.interaction.response.send_message(f'Added **{episode_count}** upcoming airing notifications for **{anime_name}**', ephemeral=True)
 
     @commands.has_role(config.role['global_mod'])
     @commands.has_role(config.role['anime_mod'])
     @airing.command(pass_context=True)
     async def clear(self, ctx: Context):
         self.airing.clear_channel(ctx.channel.id)
-        await ctx.interaction.response.send_message(f'Cleared all channel anime airing notifications')
+        await ctx.interaction.response.send_message(f'Cleared all channel anime airing notifications', ephemeral=True)
 
     @tasks.loop(seconds=10)
     async def notify_anime_channel(self):
@@ -77,7 +77,7 @@ class Notifications(commands.Cog):
             guild = self.ctx.get_guild(notification['guild_id'])
             channel = guild.get_channel_or_thread(notification['channel_id'])
             if channel is not None:
-                await channel.send(f"Episode **{notification['episode']}** of **{notification['anime_name']}** aired <t:{notification['airing']}:R>.")
+                await channel.send(f"Aflevering **{notification['episode']}** van **{notification['anime_name']}** is uit sinds <t:{notification['airing']}:R>.")
                 print(f"Episode **{notification['episode']}** of **{notification['anime_name']}** airing notification sent")
             self.airing.remove_notification(notification['id'])
 
