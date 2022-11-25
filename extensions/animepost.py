@@ -29,7 +29,11 @@ class AnimeForm(Modal):
 
     async def on_submit(self, interaction: discord.Interaction):
         forum = interaction.guild.get_channel(config.channel["anime_forum"])
-        content = f'**Description:** {self.anime["description"]}\n**Start date:** {self.anime["starts_at"]}\n{self.anime["image"]}\n<{self.anilist_link}>'
+        content = f'**Description:** {self.anime["description"]}\n' \
+                  f'**Start date:** {self.anime["starts_at"]}\n' \
+                  f'{self.anime["image"]}\n' \
+                  f'<{self.anilist_link}>\n' \
+                  f'{self.youtube.value}'
         tags = []
         filtered = filter(self.filter_tags, forum.available_tags)
         for tag in filtered:
@@ -43,13 +47,8 @@ class AnimeForm(Modal):
             applied_tags=tags
         )
         await thread.message.pin()
-        # Add notifications
-        if self.anime is not None:
-            self.airing.add_notifications_to_channel(thread[0].id, interaction.guild_id, self.anime)
-        # Add trailer
-        if self.youtube.value != '':
-            await thread[0].send(self.youtube.value)
-        await interaction.response.send_message(f'Created <#{thread[0].id}> in <#{forum.id}>')
+        self.airing.add_notifications_to_channel(thread[0].id, interaction.guild_id, self.anime)
+        await interaction.response.send_message(f'Anime post <#{thread[0].id}> aangemaakt in <#{forum.id}>')
 
 
 @commands.hybrid_command(help='Create an anime post')
