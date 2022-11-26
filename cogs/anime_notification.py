@@ -2,7 +2,7 @@ import re
 from discord.ext import tasks, commands
 from discord.ext.commands import Context, Bot
 
-from anilist.shedule import AnilistSchedule
+from anilist.anime import AnimeClient
 
 import config
 from util.airing import Airing
@@ -23,7 +23,7 @@ class Notifications(commands.Cog):
     async def by_name(self, ctx: Context, name: str):
         channel_id = ctx.channel.id
         guild_id = ctx.guild.id
-        anime = AnilistSchedule().get_anime_shedule_by_title(name)
+        anime = AnimeClient().by_title(name)
         if anime is None:
             await ctx.interaction.response.send_message(f':x: Anime {name} not found', ephemeral=True)
             return
@@ -43,7 +43,7 @@ class Notifications(commands.Cog):
             return
         channel_id = ctx.channel.id
         guild_id = ctx.guild.id
-        anime = AnilistSchedule().get_anime_shedule_by_id(anime_id)
+        anime = AnimeClient().by_id(anime_id)
         if anime is None:
             await ctx.interaction.response.send_message(f':x: Anime {anime_id} not found', ephemeral=True)
             return
@@ -65,10 +65,11 @@ class Notifications(commands.Cog):
             return
         # Update the anime schedule
         for notification in self.airing.load_current_notifications():
-            anime = AnilistSchedule().get_anime_shedule_by_id(notification['anime_id'])
+            anime = AnimeClient().by_id(notification['anime_id'])
             if anime is not None:
                 guild = self.ctx.get_guild(notification['guild_id'])
                 if guild.get_channel_or_thread(notification['channel_id']) is None:
+                    continue
                     continue
                 print(f"Updating anime schedule {notification['anime_id']}")
                 self.airing.add_notifications_to_channel(notification['channel_id'], notification['guild_id'], anime)

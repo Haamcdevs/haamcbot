@@ -1,15 +1,19 @@
 import re
 import asyncio
 import operator
+from typing import List
 
 import requests
+from discord.app_commands import Choice
 from discord.ext import commands
+from discord.ext.commands import Context
 from jikanpy import Jikan, APIException
 from cachecontrol import CacheControl
 from cachecontrol.heuristics import ExpiresAfter
 from cachecontrol.caches.file_cache import FileCache
 
 import config
+from anilist.anime import AnimeClient
 
 expires = ExpiresAfter(days=1)
 session = CacheControl(requests.Session(), heuristic=expires, cache=FileCache(config.cache_dir))
@@ -27,33 +31,24 @@ class CotsNomination(object):
 
     def parse_id(self, match):
         try:
-            return int(re.search(rf'{match}/(\d+)', self.message.content)[1])
+            return int(re.search(rf'anilist\.co/{match}/(\d+)', self.message.content)[1])
         except TypeError:
             return False
 
     async def get_anime(self):
-        try:
-            return jikan.anime(self.parse_id('anime'))
-        except APIException as e:
-            if '429' not in str(e):
-                raise e
-            await asyncio.sleep(0.5)
-            return await self.get_anime()
+        return AnimeClient().by_id(self.parse_id('anime')) or False
 
-    async def get_character(self):
-        try:
-            return jikan.character(self.parse_id('character'))
-        except APIException as e:
-            if '429' not in str(e):
-                raise e
-            await asyncio.sleep(0.5)
-            return await self.get_character()
+    async def get_character(self, anime):
+        character = filter(lambda char: char['id'] == self.parse_id('character'), anime['characters'])
+        for char in character:
+            return char
+        return None
 
-    @staticmethod
-    def is_character_in_anime(character, anime):
-        for a in character['animeography']:
-            if anime['mal_id'] == a['mal_id']:
-                return True
+    def is_character_in_anime(self, anime):
+        character_id = self.parse_id('character')
+        matches = filter(lambda char: char['id'] == character_id, anime['characters'])
+        for match in matches:
+            return True
         return False
 
     async def validate(self):
@@ -65,20 +60,18 @@ class CotsNomination(object):
         if len(errors) > 0:
             return errors
         anime = await self.get_anime()
-        character = await self.get_character()
-        if anime['premiered'] != self.season:
-            errors.append(f"Anime is niet premiered in {self.season} maar in {anime['premiered']}")
-        if not self.is_character_in_anime(character, anime):
+        if f"{anime['season']} {anime['season_year']}" != self.season:
+            errors.append('Anime is niet in het correcte seizoen')
+        if not self.is_character_in_anime(anime):
             errors.append(f'Character komt niet voor in de anime')
         return errors
 
     async def to_string(self):
-        character = await self.get_character()
         anime = await self.get_anime()
-        voice_actor = next(v for v in character['voice_actors'] if v['language'] == 'Japanese')
-        return f":mens: **{character['name']}**, *{anime['title']}*" \
-               f"\nvotes: **{self.votes}** | door: {self.message.author.name} | " \
-               f"voice actor: {voice_actor['name']} | score {anime['score']}"
+        character = await self.get_character(anime)
+        #voice_actor = next(v for v in character['voice_actors'] if v['language'] == 'Japanese')
+        return f":mens: **{character['name']}**, *{anime['name']}*" \
+               f"\nvotes: **{self.votes}** | door: {self.message.author.name}"
 
 
 class Cots(commands.Cog):
@@ -113,7 +106,7 @@ class Cots(commands.Cog):
 
     @cots.command(pass_context=True)
     @commands.has_role(config.role['global_mod'])
-    async def start(self, ctx, season: str, year: str):
+    async def start(self, ctx: Context, season: str, year: str):
         print(f'user {ctx.author} started character of the season {season} {year}')
         user = ctx.message.author
         channel = next(ch for ch in user.guild.channels if ch.id == config.channel['cots'])
@@ -127,6 +120,16 @@ class Cots(commands.Cog):
             send_messages=True,
             reason=f'Starting cots, triggered by {user.name}'
         )
+        await ctx.interaction.response.send_message(f'Started character of the season {season} {year}')
+
+    @start.autocomplete('season')
+    async def category_autocomplete(self, ctx: Context, current: str) -> List[Choice[str]]:
+        return [
+            Choice(name='Winter', value='WINTER'),
+            Choice(name='Spring', value='SPRING'),
+            Choice(name='Summer', value='SUMMER'),
+            Choice(name='Autumn', value='AUTUMN')
+        ]
 
     @commands.Cog.listener()
     async def on_message(self, message):
@@ -180,11 +183,11 @@ class Cots(commands.Cog):
                 msg = []
         if len(msg) > 0:
             await channel.send("\n".join(msg))
-        character = await winner.get_character()
         anime = await winner.get_anime()
-        msg = f":trophy: Het character van {self.get_season()} is **{character['name']}**! van {anime['title']}\n" \
+        character = await winner.get_character(anime)
+        msg = f":trophy: Het character van {self.get_season()} is **{character['name']}**! van {anime['name']}\n" \
               f"Genomineerd door {winner.message.author.name}\n" \
-              f"{character['url']}"
+              f"https://anilist.co/character/{character['id']}"
         await channel.send(msg)
         await channel.set_permissions(
             role,
@@ -192,6 +195,7 @@ class Cots(commands.Cog):
             read_messages=True,
             reason=f'Finishing cots, triggered by {user.name}'
         )
+        await ctx.interaction.response.send_message('Character of the season finished', ephemeral=True)
 
 
 async def setup(bot):

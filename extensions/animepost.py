@@ -2,7 +2,7 @@ import re
 
 from discord import ForumTag
 from discord.ext.commands import Context
-from anilist.shedule import AnilistSchedule
+from anilist.anime import AnimeClient
 
 import config
 import discord
@@ -59,7 +59,7 @@ async def anime_post(ctx: Context, anilist_link):
     except TypeError:
         await ctx.interaction.response.send_message(':x: Invalid anilist url', ephemeral=True)
         return
-    anime = AnilistSchedule().get_anime_shedule_by_id(anilist_id)
+    anime = AnimeClient().by_id(anilist_id)
     modal = AnimeForm(anime, anilist_link)
     await ctx.interaction.response.send_modal(modal)
     print(f'Created anime post for {modal.name} by {ctx.interaction.user.name}')
