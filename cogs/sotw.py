@@ -6,6 +6,7 @@ from typing import List
 import discord
 from discord.ext import commands
 import mysql.connector
+from discord.ext.commands import Context
 
 import config
 
@@ -166,21 +167,21 @@ class Sotw(commands.Cog):
         for i, nomination in enumerate(nominations):
             msg += nomination.get_ranking_text(i)
         await ctx.channel.send(msg)
+        await ctx.send('Here is the current song of the week ranking', ephemeral=True)
 
     @sotw.command(pass_context=True, help='Announce the winner and start next round of SOTW')
     @commands.has_role(config.role['global_mod'])
-    async def next(self, ctx):
+    async def next(self, ctx: Context):
         print(f"user {ctx.author} started next song of the week round")
         database.reconnect()
-        user = ctx.message.author
-        channel = next(ch for ch in user.guild.channels if ch.id == config.channel['sotw'])
+        channel = ctx.guild.get_channel(config.channel['sotw'])
         nominations = await self.get_ranked_nominations(ctx)
 
         # Check if we have enough nominations and if we have a solid win
         if len(nominations) < 2:
-            return await ctx.interaction.response.send_message(':x: Niet genoeg nominations', ephemeral=True)
+            return await ctx.send(':x: Niet genoeg nominations', ephemeral=True)
         if nominations[0].votes == nominations[1].votes:
-            return await ctx.interaction.response.send_message(':x: Het is een gelijke stand', ephemeral=True)
+            return await ctx.send(':x: Het is een gelijke stand', ephemeral=True)
 
         # Build a dict of the winner for the win message and database insertion
         winner = nominations[0]
@@ -228,7 +229,7 @@ class Sotw(commands.Cog):
 
         # Commit change
         database.commit()
-        await ctx.interaction.response.send_message('Done', ephemeral=True)
+        await ctx.send('Done', ephemeral=True)
 
 
 async def setup(bot):

@@ -21,7 +21,7 @@ async def leave(ctx):
     )
     await channel.send(f":outbox_tray: {user.mention} left")
     print(f'{user} left channel {channel} using the leave command')
-    await ctx.interaction.response.send_message('Done', ephemeral=True)
+    await ctx.send('Done', ephemeral=True)
 
 
 async def setup(bot):

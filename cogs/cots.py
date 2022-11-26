@@ -108,6 +108,7 @@ class Cots(commands.Cog):
     @commands.has_role(config.role['global_mod'])
     async def start(self, ctx: Context, season: str, year: str):
         print(f'user {ctx.author} started character of the season {season} {year}')
+        await ctx.send(f'Starting character of the season {season} {year}', ephemeral=True)
         user = ctx.message.author
         channel = next(ch for ch in user.guild.channels if ch.id == config.channel['cots'])
         role = next(r for r in user.guild.roles if r.id == config.role['user'])
@@ -120,7 +121,6 @@ class Cots(commands.Cog):
             send_messages=True,
             reason=f'Starting cots, triggered by {user.name}'
         )
-        await ctx.interaction.response.send_message(f'Started character of the season {season} {year}')
 
     @start.autocomplete('season')
     async def category_autocomplete(self, ctx: Context, current: str) -> List[Choice[str]]:
@@ -161,6 +161,7 @@ class Cots(commands.Cog):
                 msg = []
         if len(msg) > 0:
             await ctx.message.channel.send("\n".join(msg))
+        ctx.send('Here is the character of the season current ranking', ephemeral=True)
 
     @cots.command()
     @commands.has_role(config.role['global_mod'])
@@ -195,7 +196,7 @@ class Cots(commands.Cog):
             read_messages=True,
             reason=f'Finishing cots, triggered by {user.name}'
         )
-        await ctx.interaction.response.send_message('Character of the season finished', ephemeral=True)
+        await ctx.send('Character of the season finished', ephemeral=True)
         await ctx.interaction.delete_original_response()
 
 

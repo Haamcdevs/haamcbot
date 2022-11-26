@@ -1,8 +1,11 @@
 import io
 import os
+from typing import List
 
-from discord import File
+from discord import File, ChannelType
+from discord.app_commands import Choice
 from discord.ext import commands
+from discord.ext.commands import Context
 from discord.member import Member
 
 import config
@@ -10,11 +13,8 @@ import config
 
 @commands.hybrid_command(help='Export a .csv of users who joined a joinable channel')
 @commands.has_role(config.role['global_mod'])
-async def userexport(ctx, channel_id: int = 0):
-    try:
-        channel = next(ch for ch in ctx.guild.channels if ch.id == channel_id)
-    except StopIteration:
-        channel = ctx.channel
+async def userexport(ctx: Context, channel):
+    channel = ctx.guild.get_channel(int(channel))
     output = io.StringIO()
     output.write(f"id,name{os.linesep}")
     joined_members = list(filter(
@@ -26,11 +26,19 @@ async def userexport(ctx, channel_id: int = 0):
         return
     for overwrite in joined_members:
         output.write(f'{overwrite[0].id},{overwrite[0].name}{os.linesep}')
-
     binary = io.BytesIO(output.getvalue().encode('utf-8'))
-    await ctx.send(f'Here is your export {ctx.author.mention}', file=File(binary, f"{channel.name}.csv"))
+    await ctx.send(f'Here is your export for <#{channel.id}>', file=File(binary, f"{channel.name}.csv"), ephemeral=True)
     print(f"{ctx.author} exported users for channel {channel}")
-    await ctx.interaction.response.send_message('Done', ephemeral=True)
+
+
+@userexport.autocomplete('channel')
+async def channel_autocomplete(ctx: Context, current: str) -> List[Choice[str]]:
+    return [
+        Choice(name=category.name, value=f'{category.id}')
+        for category in ctx.guild.channels
+        if category.type == ChannelType.text and category.name.lower().__contains__(current.lower())
+    ][0:25]
+
 
 async def setup(bot):
     bot.add_command(userexport)

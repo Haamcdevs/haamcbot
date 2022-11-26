@@ -19,7 +19,7 @@ async def credits(ctx):
     mins = int(runtime // 60 % 60)
     seconds = int(runtime % 60)
     runtime = "{} days, {} hours, {} mins, {} seconds".format(days, hours, mins, seconds)
-    await ctx.interaction.response.send_message(f"**Info**\n- Author: {author}\n- Library: {lib}\n- Runtime: Python {appsoft}\n- Uptime: {runtime}", ephemeral=True)
+    await ctx.send(f"**Info**\n- Author: {author}\n- Library: {lib}\n- Runtime: Python {appsoft}\n- Uptime: {runtime}", ephemeral=True)
     print(f"{ctx.author} showed the bot credits <3")
 
 

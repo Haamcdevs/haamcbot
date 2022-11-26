@@ -18,13 +18,13 @@ jikan = Jikan(session=session)
 async def trailer(ctx: Context, search):
     anime = AnimeClient().by_title(search)
     if anime is None:
-        return await ctx.interaction.response.send_message(":x: Anime not found", ephemeral=True)
+        return await ctx.send(":x: Anime not found", ephemeral=True)
     if anime['trailer'] is not None:
         await ctx.channel.send(f":movie_camera: **{anime['name']}** trailer\n" + anime['trailer'])
-        await ctx.interaction.response.send_message('loading', ephemeral=True)
+        await ctx.send('loading', ephemeral=True)
         await ctx.interaction.delete_original_response()
         return
-    await ctx.interaction.response.send_message(f":x: No trailer available for **{anime['title']}**",  ephemeral=True)
+    await ctx.send(f":x: No trailer available for **{anime['title']}**",  ephemeral=True)
 
 
 async def setup(bot):

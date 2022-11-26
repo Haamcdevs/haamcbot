@@ -25,12 +25,12 @@ class Notifications(commands.Cog):
         guild_id = ctx.guild.id
         anime = AnimeClient().by_title(name)
         if anime is None:
-            await ctx.interaction.response.send_message(f':x: Anime {name} not found', ephemeral=True)
+            await ctx.send(f':x: Anime {name} not found', ephemeral=True)
             return
         self.airing.add_notifications_to_channel(channel_id, guild_id, anime)
         episode_count = len(anime['airdates'])
         anime_name = anime['name']
-        await ctx.interaction.response.send_message(f'Added {episode_count} airing notifications for {anime_name}')
+        await ctx.send(f'Added {episode_count} airing notifications for {anime_name}')
 
     @commands.has_role(config.role['global_mod'])
     @commands.has_role(config.role['anime_mod'])
@@ -39,25 +39,25 @@ class Notifications(commands.Cog):
         try:
             anime_id = re.search(r'anime/(\d+)', anilist_link)[1]
         except TypeError:
-            await ctx.interaction.response.send_message(':x: Invalid anilist url', ephemeral=True)
+            await ctx.send(':x: Invalid anilist url', ephemeral=True)
             return
         channel_id = ctx.channel.id
         guild_id = ctx.guild.id
         anime = AnimeClient().by_id(anime_id)
         if anime is None:
-            await ctx.interaction.response.send_message(f':x: Anime {anime_id} not found', ephemeral=True)
+            await ctx.send(f':x: Anime {anime_id} not found', ephemeral=True)
             return
         self.airing.add_notifications_to_channel(channel_id, guild_id, anime)
         episode_count = len(anime['airdates'])
         anime_name = anime['name']
-        await ctx.interaction.response.send_message(f'Added **{episode_count}** upcoming airing notifications for **{anime_name}**', ephemeral=True)
+        await ctx.send(f'Added **{episode_count}** upcoming airing notifications for **{anime_name}**', ephemeral=True)
 
     @commands.has_role(config.role['global_mod'])
     @commands.has_role(config.role['anime_mod'])
     @airing.command(pass_context=True)
     async def clear(self, ctx: Context):
         self.airing.clear_channel(ctx.channel.id)
-        await ctx.interaction.response.send_message(f'Cleared all channel anime airing notifications', ephemeral=True)
+        await ctx.send(f'Cleared all channel anime airing notifications', ephemeral=True)
 
     @tasks.loop(seconds=10)
     async def notify_anime_channel(self):

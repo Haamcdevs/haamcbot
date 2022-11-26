@@ -57,7 +57,7 @@ async def anime_post(ctx: Context, anilist_link):
     try:
         anilist_id = re.search(r'anime/(\d+)', anilist_link)[1]
     except TypeError:
-        await ctx.interaction.response.send_message(':x: Invalid anilist url', ephemeral=True)
+        await ctx.send(':x: Invalid anilist url', ephemeral=True)
         return
     anime = AnimeClient().by_id(anilist_id)
     modal = AnimeForm(anime, anilist_link)

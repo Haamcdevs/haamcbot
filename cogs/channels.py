@@ -271,7 +271,7 @@ class Channels(commands.Cog):
         message = JoinableMessage(message, self.bot)
         await message.update_members()
         print(f'user {ctx.author} restored {channel}')
-        await ctx.interaction.response.send_message('Done', ephemeral=True)
+        await ctx.send('Done', ephemeral=True)
 
 
 async def setup(bot):
