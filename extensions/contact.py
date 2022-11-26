@@ -13,14 +13,21 @@ class ContactForm(Modal):
         self.description = TextInput(
             label='Wat is er aan de hand',
             placeholder='Leg hier uit wat er aan de hand is',
-            style=TextStyle.long
+            style=TextStyle.long,
+            max_length=1900
         )
         self.add_item(self.description)
 
     async def on_submit(self, interaction: Interaction):
         print(f'{interaction.user} submitted mod contact form')
         channel = interaction.guild.get_channel(config.channel['admin_chat'])
+        source_channel = interaction.guild.get_channel(interaction.channel.id)
+        link = ''
+        async for msg in source_channel.history(limit=1, before=interaction.message):
+            link = msg.jump_url
+            break
         message = f'**-Mod Contact-**\n' \
+                  f'**Context:** {link}\n' \
                   f'**From:** {interaction.user.mention}\n' \
                   f'**About:** {self.description.value}'
         await channel.send(message)
