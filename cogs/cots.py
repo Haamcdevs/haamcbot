@@ -164,7 +164,7 @@ class Cots(commands.Cog):
 
     @cots.command()
     @commands.has_role(config.role['global_mod'])
-    async def finish(self, ctx):
+    async def finish(self, ctx: Context):
         print(f'user {ctx.author} finished character of the season')
         nominations = await self.get_ranked_nominations(ctx)
         if len(nominations) < 2:
@@ -196,6 +196,7 @@ class Cots(commands.Cog):
             reason=f'Finishing cots, triggered by {user.name}'
         )
         await ctx.interaction.response.send_message('Character of the season finished', ephemeral=True)
+        await ctx.interaction.delete_original_response()
 
 
 async def setup(bot):
