@@ -29,7 +29,8 @@ class ContactForm(Modal):
         message = f'**-Mod Contact-**\n' \
                   f'**Context:** {link}\n' \
                   f'**From:** {interaction.user.mention}\n' \
-                  f'**About:** {self.description.value}'
+                  f'```\n{self.description.value}\n```'
+
         await channel.send(message)
         if interaction.is_expired():
             print('timed out')
