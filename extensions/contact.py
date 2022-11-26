@@ -21,7 +21,7 @@ class ContactForm(Modal):
     async def on_submit(self, interaction: Interaction):
         print(f'{interaction.user} submitted mod contact form')
         channel = interaction.guild.get_channel(config.channel['admin_chat'])
-        source_channel = interaction.guild.get_channel(interaction.channel.id)
+        source_channel = interaction.guild.get_channel_or_thread(interaction.channel.id)
         link = ''
         async for msg in source_channel.history(limit=1, before=interaction.message):
             link = msg.jump_url
