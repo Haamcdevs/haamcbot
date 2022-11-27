@@ -2,7 +2,9 @@ from datetime import datetime, time
 
 import mysql.connector
 import pytz
+from discord import ButtonStyle
 from discord.ext import commands
+from discord.ui import View, Button
 
 import config
 
@@ -63,15 +65,15 @@ class BikkelpuntUtils(object):
         # Commit change
         database.commit()
 
-    def load_top_10(self):
-        sql = 'SELECT * FROM bikkel ORDER BY points DESC LIMIT 0,10'
+    def load_top_10(self, offset: int = 0):
+        sql = f'SELECT * FROM bikkel ORDER BY points DESC LIMIT {offset},10'
         self.bikkelpunt_cursor.execute(sql)
         return self.bikkelpunt_cursor.fetchall()
 
-    def get_top_10_message(self):
-        msg = ":last_quarter_moon_with_face: **HAAMC Discord bikkel ranking** *top 10*\n"
-        for i, bikkel in enumerate(self.load_top_10()):
-            msg += f"#{i + 1} **{bikkel['display_name']}** met **{bikkel['points']}** punten\n"
+    def get_top_10_message(self, offset: int = 0):
+        msg = f":last_quarter_moon_with_face: **HAAMC Discord bikkel ranking** *top {offset+1}/{offset + 10}*\n"
+        for i, bikkel in enumerate(self.load_top_10(offset)):
+            msg += f"#{offset + i + 1} **{bikkel['display_name']}** met **{bikkel['points']}** punten\n"
         return msg
 
 
@@ -110,10 +112,13 @@ class Bikkelpunt(commands.Cog):
             f"**+1** (**{record.get('points') + 1}** punten totaal)"
         )
 
-    @bikkel.command(help='Toon de top 10 bikkelpunten')
-    async def ranking(self, ctx):
+    @bikkel.command(pass_context=True, help='Toon de bikkel ranking, je kan optioneel een pagina opgeven')
+    async def ranking(self, ctx, page: int = 1):
+        if page < 1:
+            page = 1
+        page = page - 1
         database.reconnect()
-        await ctx.send(self.utils.get_top_10_message())
+        await ctx.send(self.utils.get_top_10_message(page*10))
 
 
 async def setup(bot):
