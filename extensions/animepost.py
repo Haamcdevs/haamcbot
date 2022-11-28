@@ -29,8 +29,11 @@ class AnimeForm(Modal):
 
     async def on_submit(self, interaction: discord.Interaction):
         forum = interaction.guild.get_channel(config.channel["anime_forum"])
+        first_episode = self.anime['starts_at']
+        if len(self.anime['airdates']) and self.anime['airdates'][0]['episode'] == 1:
+            first_episode = f"<t:{self.anime['airdates'][0]['time']}:R>"
         content = f'**Description:** {self.anime["description"]}\n' \
-                  f'**Start date:** {self.anime["starts_at"]}\n' \
+                  f'**First epidsode:** {first_episode}\n' \
                   f'{self.anime["image"]}\n' \
                   f'<{self.anilist_link}>\n' \
                   f'{self.youtube.value}'
