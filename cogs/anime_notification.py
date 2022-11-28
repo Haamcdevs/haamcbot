@@ -41,7 +41,7 @@ class Notifications(commands.Cog):
             await ctx.send(f'Geen volgende aflevering gevonden voor dit kanaal', ephemeral=True)
             return
         notification = notifications[0]
-        await ctx.send(f"De volgende aflevering van **{notification['anime_name']}** komt uit <t:{notification['airing']}:R>.")
+        await ctx.send(f"Aflevering **{notification['episode']}** van **{notification['anime_name']}** komt uit <t:{notification['airing']}:R>.")
 
     @commands.has_role(config.role['global_mod'])
     @commands.has_role(config.role['anime_mod'])
