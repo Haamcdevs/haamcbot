@@ -97,7 +97,9 @@ class AnimeClient:
             'genres': media['genres'],
             'season_year': media['seasonYear'],
             'season': media['season'],
-            'starts_at': f"{media['startDate']['day']}/{media['startDate']['month']}/{media['startDate']['year']}",
+            'starts_at': f"{media['startDate']['day'] or '?'}/"
+                         f"{media['startDate']['month'] or '?'}/"
+                         f"{media['startDate']['year'] or '?'}",
             'image': media['coverImage']['extraLarge'],
             'description': html2md(media['description'] or ''),
             'airdates': airdates,
