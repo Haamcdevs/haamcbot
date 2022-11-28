@@ -32,8 +32,12 @@ class AnimeForm(Modal):
         first_episode = self.anime['starts_at']
         if len(self.anime['airdates']) and self.anime['airdates'][0]['episode'] == 1:
             first_episode = f"<t:{self.anime['airdates'][0]['time']}:R>"
+        episodes = ''
+        if self.anime['episodes'] is not None:
+            episodes = f'**Episodes: **{self.anime["episodes"]}\n'
         content = f'{self.anime["description"]}\n' \
-                  f'**First episode**: {first_episode}\n' \
+                  f'**First episode: **{first_episode}\n' \
+                  f'{episodes}' \
                   f'{self.anime["image"]}\n' \
                   f'<{self.anilist_link}>\n' \
                   f'{self.youtube.value}'
