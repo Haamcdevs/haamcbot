@@ -32,6 +32,17 @@ class Notifications(commands.Cog):
         anime_name = anime['name']
         await ctx.send(f'Added {episode_count} airing notifications for {anime_name}')
 
+    @airing.command(pass_context=True, description='Toon de wanneer de volgende episode aired.')
+    @commands.has_role(config.role['user'])
+    async def next(self, ctx: Context):
+        channel_id = ctx.channel.id
+        notifications = list(Airing().load_next(channel_id))
+        if len(notifications) == 0:
+            await ctx.send(f'Geen volgende aflevering gevonden voor dit kanaal', ephemeral=True)
+            return
+        notification = notifications[0]
+        await ctx.send(f"Volgende aflevering van **{notification['anime_name']}** komt uit <t:{notification['airing']}:R>.")
+
     @commands.has_role(config.role['global_mod'])
     @commands.has_role(config.role['anime_mod'])
     @airing.command(pass_context=True)

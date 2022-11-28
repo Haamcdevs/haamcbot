@@ -23,6 +23,11 @@ class Airing:
         self.cursor.execute(sql)
         return self.cursor.fetchall()
 
+    def load_next(self, channel_id: int):
+        sql = f'SELECT * FROM anime_notifications WHERE channel_id = {channel_id} ORDER BY airing ASC LIMIT 1'
+        self.cursor.execute(sql)
+        return self.cursor.fetchall()
+
     def remove_notification(self, notification_id: int):
         sql = f'DELETE FROM anime_notifications WHERE id = {notification_id}'
         self.cursor.execute(sql)
