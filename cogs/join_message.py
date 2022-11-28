@@ -31,7 +31,7 @@ class JoinMessage(Cog):
         await asyncio.sleep(3)
         await channel.send(
             f'Welkom {member.mention}, ik ben Rory, de mascotte van {member.guild.name}!\n'
-            f'Voor toegang tot de server hebben we nog enkele vragen. \n\n'
+            f'Voor dat je de hele server kunt zien, moet je eerst twee vragen beantwoorden.\n\n'
             f':one: Wat is je **favoriete serie**?\n\n'
             f':two: **Hoe of waar** heb je ons gevonden?'
         )
