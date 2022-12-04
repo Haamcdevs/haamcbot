@@ -25,13 +25,13 @@ jikan = Jikan(session=session)
 
 class ChannelForm(Modal):
     def __init__(self, category_id: int):
-        super().__init__(title="Welcome to Create-a-channel")  # Modal title
+        super().__init__(title="Welcome to Create-a-channel", custom_id="create_form", timeout=None)  # Modal title
         self.category_id = category_id
 
-        self.name = TextInput(label="Name", min_length=2, max_length=32)
+        self.name = TextInput(label="Name", min_length=2, max_length=32, custom_id="name")
         self.add_item(self.name)
 
-        self.description = TextInput(label="Description", style=TextStyle.long, max_length=1024, required=False)
+        self.description = TextInput(label="Description", style=TextStyle.long, max_length=1024, required=False, custom_id="description")
         self.add_item(self.description)
 
     async def on_submit(self, interaction: discord.Interaction):
