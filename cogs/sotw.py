@@ -4,6 +4,7 @@ import operator
 from typing import List
 
 import discord
+from discord import ui, Guild
 from discord.ext import commands
 import mysql.connector
 from discord.ext.commands import Context
@@ -18,6 +19,27 @@ database = mysql.connector.connect(
 )
 
 
+class SotwNominationModal(ui.Modal, title='Song of the week'):
+    nomination_artist = ui.TextInput(label='Artist', custom_id='artist')
+    nomination_title = ui.TextInput(label='Title', custom_id='title')
+    nomination_anime = ui.TextInput(label='Anime', custom_id='anime')
+    nomination_youtube = ui.TextInput(label='Youtube link', custom_id='youtube')
+
+    async def on_submit(self, interaction: discord.Interaction):
+        if not re.match(r'.*youtu\.?be.*', self.nomination_youtube.value):
+            await interaction.response.send_message(f':x: Invalid youtube link', ephemeral=True)
+            return
+        message = f'{self.nomination_youtube.value}\n' \
+                  f'**Artist:** {self.nomination_artist.value}\n' \
+                  f'**Title:** {self.nomination_title.value}\n' \
+                  f'**Anime:** {self.nomination_anime.value}\n' \
+                  f'**User:** {interaction.user.mention}\n'
+        channel = interaction.guild.get_channel_or_thread(config.channel['sotw'])
+        message = await channel.send(message)
+        await message.add_reaction('🔼')
+        await interaction.response.send_message(f'Nomination added to {channel.mention}', ephemeral=True)
+
+
 class SotwNomination(object):
     def __init__(self, message: discord.message):
         self.message = message
@@ -27,7 +49,7 @@ class SotwNomination(object):
             self.votes = 0
 
     def get_field_value(self, field):
-        regex = rf"{field}\:([^\n]+)"
+        regex = rf"\*\*{field}\:\*\*([^\n]+)"
         content = self.message.content
         match = re.search(regex, content, re.IGNORECASE | re.MULTILINE)
         if match:
@@ -36,15 +58,16 @@ class SotwNomination(object):
             return None
 
     def get_username(self):
-        return self.message.author.display_name
+        guild: Guild = self.message.guild
+        return guild.get_member(self.get_userid()).display_name
 
     def get_userid(self):
-        return self.message.author.id
+        matches = re.search('<@([0-9]+)+>', self.message.content)
+        return int(matches.group(1)) or None
 
     def get_youtube_code(self):
         regex = rf"([\w-]*)$"
-        url = self.get_field_value('url')
-        match = re.search(regex, url, re.IGNORECASE | re.MULTILINE)
+        match = re.search(regex, self.message.content, re.IGNORECASE | re.MULTILINE)
         if match:
             return match.group(1)
         else:
@@ -54,37 +77,25 @@ class SotwNomination(object):
         code = self.get_youtube_code()
         return f'https://www.youtube.com/watch?v={code}'
 
-    async def validate(self):
-        fields = ["artist", "title", "anime", "url"]
-        errors = []
-        for field in fields:
-            result = self.get_field_value(field)
-            if result is None or result == '':
-                errors.append(f"{field} is ongeldig")
-            if field == 'url' and result is not None and re.match(r'.*youtu\.?be.*', result) is None:
-                errors.append(f"Youtube url is required")
-
-        return errors
-
     def get_winner_text(self, week):
-        return f"\nWeek {week}: {self.get_field_value('artist')} - " \
-               f"{self.get_field_value('title')} ({self.get_field_value('anime')}) " \
-               f"door {self.message.author.display_name} - {self.get_yt_url()}\n"
+        return f"\nWeek {week}: {self.get_field_value('Artist')} - " \
+               f"{self.get_field_value('Title')} ({self.get_field_value('Anime')}) " \
+               f"door {self.get_username()} - {self.get_yt_url()}\n"
 
     def get_bbcode(self):
         yt_code = self.get_youtube_code()
-        return f"[spoiler=\"{self.votes} Votes ({self.message.author.display_name}) :" \
-               f" {self.get_field_value('artist')}" \
-               f" - {self.get_field_value('title')} ({self.get_field_value('anime')})\"]" \
+        return f"[spoiler=\"{self.votes} Votes ({self.get_username()}) :" \
+               f" {self.get_field_value('Artist')}" \
+               f" - {self.get_field_value('Title')} ({self.get_field_value('Anime')})\"]" \
                f"[yt]{yt_code}[/yt]" \
                f"[/spoiler]\n"
 
     def get_ranking_text(self, i: int):
-        return f":radio: {i + 1}) **{self.get_field_value('artist')}** - " \
-               f"**{self.get_field_value('title')}**\n" \
+        return f":radio: {i + 1}) **{self.get_field_value('Artist')}** - " \
+               f"**{self.get_field_value('Title')}**\n" \
                f"votes: **{self.votes}** | " \
-               f"anime: *{self.get_field_value('anime')}* | " \
-               f"door: {self.message.author.display_name}\n"
+               f"anime: *{self.get_field_value('Anime')}* | " \
+               f"door: {self.get_username()}\n"
 
 
 class Sotw(commands.Cog):
@@ -121,7 +132,7 @@ class Sotw(commands.Cog):
         messages = [message async for message in channel.history(limit=100)]
         nominations = []
         for msg in messages:
-            if msg.author.bot:
+            if msg.author.bot and re.match('.*Bij deze zijn de nominaties voor week.*', msg.content):
                 break
             nominations.append(SotwNomination(msg))
         nominations.sort(key=operator.attrgetter('votes'), reverse=True)
@@ -136,29 +147,9 @@ class Sotw(commands.Cog):
         msg += f'[/spoiler]\n' \
                f'```\n' \
                f'<https://myanimelist.net/forum/?topicid=1680313>\n' \
-               f'`t€scores add {nominations[0].message.author.id} 1500`'
+               f'`t€scores add {nominations[0].get_userid()} 1500`\n' \
+               f'<#{config.channel["sotw"]}>'
         return msg
-
-    # Listen for nominations in the SOTW channel
-    @commands.Cog.listener()
-    async def on_message(self, message):
-        if message.author.bot or message.channel.id != config.channel['sotw']:
-            return
-        print(f"user {message.author} submitted sotw nomination\n\n{message.content}\n")
-        errors = []
-        try:
-            nomination = SotwNomination(message)
-            errors = await nomination.validate()
-        except Exception as e:
-            print(e)
-        if len(errors):
-            error_message = await message.channel.send("\n:x: " + "\n:x: ".join(errors))
-            await message.delete(delay=5)
-            await error_message.delete(delay=5)
-            print(f"user {message.author}'s sotw nomination was invalid: " + "\n".join(errors))
-            return
-        print(f"user {message.author}'s sotw nomination is valid")
-        await message.add_reaction('🔼')
 
     @sotw.command(pass_context=True, help='Show the SOTW ranking')
     async def ranking(self, ctx):
@@ -166,8 +157,11 @@ class Sotw(commands.Cog):
         msg = ''
         for i, nomination in enumerate(nominations):
             msg += nomination.get_ranking_text(i)
-        await ctx.channel.send(msg)
-        await ctx.send('Here is the current song of the week ranking', ephemeral=True)
+        if msg == '':
+            await ctx.send(':x: No nominations', ephemeral=True)
+            return
+        #await ctx.channel.send(msg)
+        await ctx.send(f'Here is the current song of the week ranking\n{msg}', ephemeral=True)
 
     @sotw.command(pass_context=True, help='Announce the winner and start next round of SOTW')
     @commands.has_role(config.role['global_mod'])
@@ -185,26 +179,20 @@ class Sotw(commands.Cog):
 
         # Build a dict of the winner for the win message and database insertion
         winner = nominations[0]
-        await ctx.channel.send(await self.forum(nominations))
+        await ctx.send(await self.forum(nominations))
+
         # Send the win message
         await channel.send(
             f":trophy: De winnaar van week {self.get_previous_week_number()} is: "
-            f"{winner.get_field_value('artist')} - "
-            f"{winner.get_field_value('title')} "
-            f"({winner.get_field_value('anime')}) "
-            f"door {winner.message.author.mention} <{winner.get_yt_url()}>")
+            f"{winner.get_field_value('Artist')} - "
+            f"{winner.get_field_value('Title')} "
+            f"({winner.get_field_value('Anime')}) "
+            f"door <@{winner.get_userid()}> <{winner.get_yt_url()}>")
 
         # Send the start of the new nomination week
         await channel.send(
             f":musical_note: :musical_note: Bij deze zijn de nominaties voor week"
             f" {self.get_current_week_number()} geopend! :musical_note: :musical_note:\n"
-            f"Nomineer volgens onderstaande template (kopieer en plak deze, en zet er dan de gegevens in):\n"
-            f"```\n"
-            f"artist: \n"
-            f"title: \n"
-            f"anime:  \n"
-            f"url: \n"
-            f"```\n"
         )
 
         # Open database before sending win message
@@ -215,9 +203,9 @@ class Sotw(commands.Cog):
               " VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
         val = (
             winner.get_userid(),
-            winner.get_field_value('artist'),
-            winner.get_field_value('title'),
-            winner.get_field_value('anime'),
+            winner.get_field_value('Artist'),
+            winner.get_field_value('Title'),
+            winner.get_field_value('Anime'),
             winner.get_youtube_code(),
             datetime.datetime.now(),
             winner.votes,
@@ -229,7 +217,11 @@ class Sotw(commands.Cog):
 
         # Commit change
         database.commit()
-        await ctx.send('Done', ephemeral=True)
+
+    @sotw.command(pass_context=True, help='Make a nomination for song of the week')
+    @commands.has_role(config.role['user'])
+    async def nomination(self, ctx: Context):
+        await ctx.interaction.response.send_modal(SotwNominationModal())
 
 
 async def setup(bot):

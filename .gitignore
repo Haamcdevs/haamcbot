@@ -15,3 +15,4 @@ config.py
 # Local History for Visual Studio Code
 .history/
 
+/extensions/reload.py
