@@ -193,6 +193,7 @@ class Sotw(commands.Cog):
         await channel.send(
             f":musical_note: :musical_note: Bij deze zijn de nominaties voor week"
             f" {self.get_current_week_number()} geopend! :musical_note: :musical_note:\n"
+            f"Gebruik `/sotw nomination` in een ander kanaal om te nomineren"
         )
 
         # Open database before sending win message

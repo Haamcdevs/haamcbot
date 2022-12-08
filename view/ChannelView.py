@@ -18,6 +18,9 @@ class ChannelView(ui.View):
         if await jm.is_locked():
             await interaction.response.send_message(f'🔒 Cannot join because the channel is locked', ephemeral=True, delete_after=2)
             return
+        if await jm.is_banned(interaction.user):
+            await interaction.response.send_message(f':no_entry: You are not allowed to join this channel', ephemeral=True, delete_after=2)
+            return
         await jm.add_user(interaction.user)
         await interaction.response.send_message(f'You joined channel <#{jm.get_channel_id()}>', ephemeral=True,
                                                 delete_after=2)
