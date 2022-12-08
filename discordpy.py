@@ -7,9 +7,11 @@ import discord
 from discord.ext import commands
 
 import config
+from view.ChannelView import ChannelView
 
 intents = discord.Intents.default()
 bot = commands.Bot(command_prefix='/', description='Rory bot, haamc private', intents=intents.all())
+
 
 
 @bot.event
@@ -38,6 +40,7 @@ async def on_message(msg):
 
 @bot.event
 async def setup_hook():
+    bot.add_view(ChannelView(bot))
     for filename in os.listdir(os.path.dirname(os.path.abspath(__file__)) + '/cogs'):
         if filename.endswith('.py'):
             await bot.load_extension(f'cogs.{filename[:-3]}')

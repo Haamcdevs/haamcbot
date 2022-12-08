@@ -4,7 +4,7 @@ from typing import List
 import requests
 
 import discord
-from discord import ChannelType
+from discord import ChannelType, ui, ButtonStyle, Interaction
 from discord.app_commands import Choice
 from discord.ext import commands
 from discord.member import Member
@@ -24,14 +24,15 @@ jikan = Jikan(session=session)
 
 
 class ChannelForm(Modal):
-    def __init__(self, category_id: int):
+    def __init__(self, category_id: int, channels):
         super().__init__(title="Welcome to Create-a-channel", custom_id="create_form", timeout=None)  # Modal title
         self.category_id = category_id
-
+        self.channels = channels
         self.name = TextInput(label="Name", min_length=2, max_length=32, custom_id="name")
         self.add_item(self.name)
 
-        self.description = TextInput(label="Description", style=TextStyle.long, max_length=1024, required=False, custom_id="description")
+        self.description = TextInput(label="Description", style=TextStyle.long, max_length=1024, required=False,
+                                     custom_id="description")
         self.add_item(self.description)
 
     async def on_submit(self, interaction: discord.Interaction):
@@ -49,8 +50,9 @@ class ChannelForm(Modal):
             overwrites=Channels.get_overwites(interaction.guild, category)
         )
         embed = JoinableMessage.create_simple_embed(new_channel, 0)
-        await Channels._joinmessage(interaction.channel, embed)
-        await interaction.response.send_message(f'Joinable channel <#{new_channel.id}> created', ephemeral=True)
+        await self.channels._joinmessage(interaction.channel, embed)
+        await interaction.response.send_message(f'Joinable channel <#{new_channel.id}> created', ephemeral=True, delete_after=5)
+
 
 class JoinableMessage:
     def __init__(self, message: discord.message, bot):
@@ -99,66 +101,42 @@ class JoinableMessage:
             if type(o[0]) is Member and o[1].read_messages is True and o[0].bot is False
         ])
 
+    async def is_locked(self):
+        message = await self.message.fetch()
+        try:
+            next(r for r in message.reactions if r.emoji == '🔒')
+        except StopIteration:
+            return False
+        return True
+
     async def add_user(self, user: discord.user):
         channel = await self.get_channel()
         await channel.set_permissions(user, read_messages=True, reason=f"User joined trough joinable channel")
         await channel.send(f":inbox_tray: {user.mention} joined")
         await self.update_members()
+        print(f'user {user} joined {channel.name}')
 
     async def remove_user(self, user: discord.user):
         channel = await self.get_channel()
         await channel.set_permissions(user, overwrite=None, reason=f"User left trough joinable channel")
         await channel.send(f":outbox_tray: {user.mention} left")
         await self.update_members()
-
-    @staticmethod
-    def create_anime_embed(channel: discord.TextChannel, anime, members):
-        embed = discord.Embed(type='rich')
-        embed.set_author(name=anime['title'], icon_url='https://i.imgur.com/pcdrHvS.png', url=anime['url'])
-        embed.set_footer(text='Druk op de reactions om te joinen / leaven')
-        embed.set_thumbnail(url=anime['image_url'])
-        embed.add_field(name='studio', value=', '.join([stu['name'] for stu in anime['studios']]) or '-')
-        embed.add_field(name='datum', value=anime['aired']['string'])
-        embed.add_field(name='genres'.ljust(122) + "ᅠ",
-                        value=', '.join([gen['name'] for gen in anime['genres']] or '-'),
-                        inline=False)
-        embed.add_field(name='channel', value=channel.mention)
-        embed.add_field(name='kijkers', value=str(members))
-        return embed
+        print(f'user {user} left {channel.name}')
 
     @staticmethod
     def create_simple_embed(channel: discord.TextChannel, members) -> discord.Embed:
         embed = discord.Embed(type='rich')
         embed.set_author(icon_url='https://i.imgur.com/pcdrHvS.png', name="")
-        embed.set_footer(text='Druk op de reactions om te joinen / leaven')
         embed.add_field(name='description'.ljust(122) + "ᅠ", value=channel.topic, inline=False)
         embed.add_field(name='channel', value=channel.mention)
-        embed.add_field(name='members', value=str(members))
+        embed.add_field(name='members', value=f'** ` {members} ` **')
         return embed
-
-    @staticmethod
-    def get_anime_from_url(url):
-        try:
-            mal_id = re.search(r'anime/(\d+)', url)
-            return jikan.anime(int(mal_id[1]))
-        except IndexError:
-            return None
-        except TypeError:
-            return None
-
-    def get_anime(self):
-        return self.get_anime_from_url(self.message.embeds[0].author.url)
 
     async def update_members(self):
         member_count = await self.get_member_count()
         channel = await self.get_channel()
-        anime = self.get_anime()
-        if anime is not None:
-            embed = self.create_anime_embed(channel, anime, member_count)
-            await self.message.edit(embed=embed)
-            return
         embed = self.create_simple_embed(channel, member_count)
-        await self.message.edit(embed=embed)
+        await self.message.edit(embed=embed, view=self.bot.persistent_views[0])
 
 
 class Channels(commands.Cog):
@@ -172,18 +150,14 @@ class Channels(commands.Cog):
         overwrites[guild.default_role] = discord.PermissionOverwrite(read_messages=False)
         return overwrites
 
-    @staticmethod
-    async def _joinmessage(channel, embed) -> discord.message:
-        msg = await channel.send(embed=embed)
-        await msg.add_reaction('▶')
-        await msg.add_reaction('⏹')
-        return msg
+    async def _joinmessage(self, channel, embed) -> discord.message:
+        return await channel.send(embed=embed, view=self.bot.persistent_views[0])
 
     @commands.hybrid_command(pass_context=True, help='Create a joinable channel')
     @commands.has_role(config.role['global_mod'])
     async def joinable_channel(self, ctx: Context, category):
         category_id = int(category)
-        modal = ChannelForm(category_id)
+        modal = ChannelForm(category_id, self)
         await ctx.interaction.response.send_modal(modal)
 
     @joinable_channel.autocomplete('category')
@@ -209,7 +183,6 @@ class Channels(commands.Cog):
         if await message.is_joined(user) or await message.is_banned(user):
             print(f'user {user} has already joined / is banned from {joinable_channel}')
             return
-        print(f'user {user} joined {joinable_channel}')
         await message.add_user(user)
 
     @commands.Cog.listener(name='on_raw_reaction_add')
@@ -227,7 +200,6 @@ class Channels(commands.Cog):
             return
         await message.remove_user(user)
         joinable_channel = await message.get_channel()
-        print(f'user {user} left {joinable_channel}')
 
     @commands.Cog.listener(name='on_raw_reaction_add')
     async def refresh(self, payload):
@@ -239,7 +211,8 @@ class Channels(commands.Cog):
         message = JoinableMessage(msg, self.bot)
         if message.is_joinable() is False:
             return
-        await next(r for r in msg.reactions if r.emoji == '🔁').remove(user)
+            return
+        await msg.clear_reactions()
         await message.update_members()
         joinable_channel = await message.get_channel()
         print(f'user {user} updated {joinable_channel}')
@@ -254,24 +227,25 @@ class Channels(commands.Cog):
         message = JoinableMessage(msg, self.bot)
         if message.is_joinable() is False:
             return
-        if message.get_anime() is None:
-            if not bool([r for r in payload.member.roles if r.id == config.role['global_mod']]):
-                return
         joinable_channel = await message.get_channel()
         await joinable_channel.delete()
         await msg.delete()
         print(f'user {payload.member} deleted {joinable_channel}')
+
+    @commands.Cog.listener(name='on_click')
+    async def on_button_click(interaction: Interaction):
+        print(interaction.component)
 
     @commands.hybrid_command(pass_context=True, help='Restore a simple channel join message')
     @commands.has_role(config.role['global_mod'])
     async def rechannel(self, ctx, channelid):
         channel = await self.bot.fetch_channel(channelid)
         embed = JoinableMessage.create_simple_embed(channel, 0)
-        message = await self._joinmessage(ctx.channel, embed)
+        message = await self._joinmessage(channel=ctx.channel, embed=embed)
         message = JoinableMessage(message, self.bot)
         await message.update_members()
         print(f'user {ctx.author} restored {channel}')
-        await ctx.send('Done', ephemeral=True)
+        await ctx.send('Done', ephemeral=True, delete_after=3)
 
 
 async def setup(bot):
