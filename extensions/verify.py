@@ -21,7 +21,7 @@ async def verify(ctx: Context, user: str):
     emoji = [emote for emote in ctx.guild.emojis if emote.name == 'pikawave'][0]
     await channel.send(
         f'Welkom {user.mention}! <a:{emoji.name}:{emoji.id}>\n'
-        f'Kijk in de <#513719588165386241> voor meer opties.'
+        f'Kijk in de <#513719588165386241> voor meer informatie.'
     )
 
 
