@@ -15,10 +15,14 @@ async def verify(ctx: Context, user: str):
     user = int(user[0])
     user = ctx.guild.get_member(user)
     role = ctx.guild.get_role(config.role['user'])
-    await user.add_roles(role, reason=f'User verified by {ctx.author.name}')
+    if role in user.roles:
+        await ctx.send(f':x: Member {user.mention} is already verified', ephemeral=True)
+        return
+    await user.add_roles(role, reason=f'User verified by {ctx.author}')
     channel = ctx.guild.get_channel_or_thread(config.channel['general'])
     await ctx.send(f'Verified member {user.mention}', ephemeral=True)
     emoji = [emote for emote in ctx.guild.emojis if emote.name == 'pikawave'][0]
+    print(f'User {user} verified by {ctx.author}')
     await channel.send(
         f'Welkom {user.mention}! <a:{emoji.name}:{emoji.id}>\n'
         f'Kijk in de <#513719588165386241> voor meer informatie.'
