@@ -70,7 +70,7 @@ class Notifications(commands.Cog):
         self.airing.clear_channel(ctx.channel.id)
         await ctx.send(f'Cleared all channel anime airing notifications', ephemeral=True)
 
-    @tasks.loop(seconds=10)
+    @tasks.loop(seconds=60)
     async def notify_anime_channel(self):
         if not self.ctx.is_ready():
             return
@@ -80,7 +80,6 @@ class Notifications(commands.Cog):
             if anime is not None:
                 guild = self.ctx.get_guild(notification['guild_id'])
                 if guild.get_channel_or_thread(notification['channel_id']) is None:
-                    continue
                     continue
                 print(f"Updating anime schedule {notification['anime_id']}")
                 self.airing.add_notifications_to_channel(notification['channel_id'], notification['guild_id'], anime)
@@ -92,6 +91,7 @@ class Notifications(commands.Cog):
                 await channel.send(f"Aflevering **{notification['episode']}** van **{notification['anime_name']}** is uit sinds <t:{notification['airing']}:R>.")
                 print(f"Episode **{notification['episode']}** of **{notification['anime_name']}** airing notification sent")
             self.airing.remove_notification(notification['id'])
+
 
 async def setup(bot):
     await bot.add_cog(Notifications(bot))
