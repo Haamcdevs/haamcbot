@@ -14,13 +14,13 @@ from util.airing import Airing
 
 class AnimeForm(Modal):
     def __init__(self, anime, anilist_link):
-        super().__init__(title=f'Maak post aan voor {anime["name"]}'[0:45])  # Modal title
+        super().__init__(title=f'Maak post aan voor {anime["name"]}'[0:45], timeout=None)  # Modal title
         self.anime = anime
         self.airing = Airing()
         self.anilist_link = anilist_link
-        self.name = TextInput(label='name', required=True, default=anime['name'][0:100])
+        self.name = TextInput(label='name', required=True, default=anime['name'][0:100], custom_id='name')
         self.add_item(self.name)
-        self.youtube = TextInput(label='Youtube trailer link', required=False, default=self.anime['trailer'])
+        self.youtube = TextInput(label='Youtube trailer link', required=False, default=self.anime['trailer'], custom_id='trailer')
         if anime['trailer'] is None:
             self.add_item(self.youtube)
 
@@ -56,6 +56,7 @@ class AnimeForm(Modal):
         await thread.message.pin()
         self.airing.add_notifications_to_channel(thread[0].id, interaction.guild_id, self.anime)
         await interaction.response.send_message(f'Anime post <#{thread[0].id}> aangemaakt in <#{forum.id}>')
+        print(f'Created anime post for {self.name} by {interaction.user.name}')
 
 
 @commands.hybrid_command(help='Create an anime post')
@@ -69,7 +70,6 @@ async def anime_post(ctx: Context, anilist_link):
     anime = AnimeClient().by_id(anilist_id)
     modal = AnimeForm(anime, anilist_link)
     await ctx.interaction.response.send_modal(modal)
-    print(f'Created anime post for {modal.name} by {ctx.interaction.user.name}')
 
 
 async def setup(bot):
