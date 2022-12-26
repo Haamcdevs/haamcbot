@@ -128,7 +128,7 @@ class Cots(commands.Cog):
             Choice(name='Winter', value='WINTER'),
             Choice(name='Spring', value='SPRING'),
             Choice(name='Summer', value='SUMMER'),
-            Choice(name='Autumn', value='AUTUMN')
+            Choice(name='Fall', value='FALL')
         ]
 
     @commands.Cog.listener()
