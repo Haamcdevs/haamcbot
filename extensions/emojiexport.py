@@ -2,6 +2,7 @@ import io
 import os
 from typing import List
 
+import numpy as np
 from discord import File, ChannelType
 from discord.app_commands import Choice
 from discord.ext import commands
@@ -13,7 +14,7 @@ import config
 @commands.hybrid_command(help='Export a .csv of messages with their emoji count')
 @commands.has_role(config.role['global_mod'])
 async def export(ctx: Context, channel):
-    channel = ctx.guild.get_channel(int(channel))
+    channel = ctx.guild.get_channel_or_thread(int(channel))
     output = io.StringIO()
     output.write(f"emoji,count,message,author,createdat{os.linesep}")
 
@@ -39,11 +40,19 @@ async def export(ctx: Context, channel):
 
 @export.autocomplete('channel')
 async def channel_autocomplete(ctx: Context, current: str) -> List[Choice[str]]:
-    return [
-        Choice(name=category.name, value=f'{category.id}')
-        for category in ctx.guild.channels
-        if category.type == ChannelType.text and category.name.lower().__contains__(current.lower())
-    ][0:25]
+
+    channels = [
+        Choice(name=channel.name, value=f'{channel.id}')
+        for channel in ctx.guild.text_channels
+        if channel.name.lower().__contains__(current.lower())
+    ]
+    threads = [
+        Choice(name=thread.name, value=f'{thread.id}')
+        for thread in ctx.guild.threads
+        if thread.name.lower().__contains__(current.lower())
+    ]
+
+    return (channels + threads)[0:25]
 
 
 async def setup(bot):
