@@ -15,6 +15,7 @@ class Notifications(commands.Cog):
 
     async def cog_load(self):
         self.notify_anime_channel.start()
+        self.reconnect_db.start()
 
     @commands.hybrid_group(name='airing', invoke_without_commands=False, help='Anime Notifications')
     async def airing(self, ctx):
@@ -80,6 +81,7 @@ class Notifications(commands.Cog):
             if anime is not None:
                 guild = self.ctx.get_guild(notification['guild_id'])
                 if guild.get_channel_or_thread(notification['channel_id']) is None:
+                    self.airing.clear_channel(notification['channel_id'])
                     continue
                 print(f"Updating anime schedule {notification['anime_id']}")
                 self.airing.add_notifications_to_channel(notification['channel_id'], notification['guild_id'], anime)
@@ -91,6 +93,11 @@ class Notifications(commands.Cog):
                 await channel.send(f"Aflevering **{notification['episode']}** van **{notification['anime_name']}** is uit sinds <t:{notification['airing']}:R>.")
                 print(f"Episode **{notification['episode']}** of **{notification['anime_name']}** airing notification sent")
             self.airing.remove_notification(notification['id'])
+
+    @tasks.loop(hours=24)
+    async def reconnect_db(self):
+        print('Reconnecting airing database')
+        self.airing.reconnect()
 
 
 async def setup(bot):

@@ -60,3 +60,6 @@ class Airing:
                 anime['name'],
                 airdate['time']
             )
+
+    def reconnect(self):
+        database.reconnect(10, 5)
