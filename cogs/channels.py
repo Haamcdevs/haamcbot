@@ -125,7 +125,7 @@ class JoinableMessage:
 
     @staticmethod
     def create_simple_embed(channel: discord.TextChannel, members) -> discord.Embed:
-        embed = discord.Embed(type='rich')
+        embed = discord.Embed(type='rich', title=channel.name)
         embed.set_author(icon_url='https://i.imgur.com/pcdrHvS.png', name="")
         embed.add_field(name='description'.ljust(122) + "ᅠ", value=channel.topic, inline=False)
         embed.add_field(name='channel', value=channel.mention)
