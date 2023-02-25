@@ -1,5 +1,4 @@
-import requests
-import json
+import aiohttp
 
 from util.html2md import html2md
 
@@ -57,24 +56,26 @@ animeStructure = '''
 
 
 class AnimeClient:
-    def by_id(self, anime_id: int):
+    async def by_id(self, anime_id: int):
         query_string = 'query ($animeId: Int) {Media(id: $animeId, type: ANIME) {' + animeStructure + '}}'
         variables = {
             'animeId': anime_id
         }
         url = 'https://graphql.anilist.co'
-        response = requests.post(url, json={'query': query_string, 'variables': variables})
-        response_data = json.loads(response.text)
+        async with aiohttp.ClientSession() as session:
+            async with session.post(url, json={'query': query_string, 'variables': variables}) as response:
+                response_data = await response.json()
         return self.anime_def(response_data)
 
-    def by_title(self, title: str):
+    async def by_title(self, title: str):
         query_string = 'query ($title: String) {Media(search: $title, type: ANIME) {' + animeStructure + '}}'
         variables = {
             'title': title
         }
         url = 'https://graphql.anilist.co'
-        response = requests.post(url, json={'query': query_string, 'variables': variables})
-        response_data = json.loads(response.text)
+        async with aiohttp.ClientSession() as session:
+            async with session.post(url, json={'query': query_string, 'variables': variables}) as response:
+                response_data = await response.json()
         return self.anime_def(response_data)
 
     def anime_def(self, response):

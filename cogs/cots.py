@@ -36,7 +36,7 @@ class CotsNomination(object):
             return False
 
     async def get_anime(self):
-        return AnimeClient().by_id(self.parse_id('anime')) or False
+        return await AnimeClient().by_id(self.parse_id('anime')) or False
 
     async def get_character(self, anime):
         character = filter(lambda char: char['id'] == self.parse_id('character'), anime['characters'])

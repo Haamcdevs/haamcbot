@@ -16,7 +16,7 @@ jikan = Jikan(session=session)
 
 @commands.hybrid_command(help='Show anime trailer if available on MAL')
 async def trailer(ctx: Context, search):
-    anime = AnimeClient().by_title(search)
+    anime = await AnimeClient().by_title(search)
     if anime is None:
         return await ctx.send(":x: Anime not found", ephemeral=True)
     if anime['trailer'] is not None:

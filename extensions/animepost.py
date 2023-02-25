@@ -67,7 +67,7 @@ async def anime_post(ctx: Context, anilist_link):
     except TypeError:
         await ctx.send(':x: Invalid anilist url', ephemeral=True)
         return
-    anime = AnimeClient().by_id(anilist_id)
+    anime = await AnimeClient().by_id(anilist_id)
     modal = AnimeForm(anime, anilist_link)
     await ctx.interaction.response.send_modal(modal)
 
