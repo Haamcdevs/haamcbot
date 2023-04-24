@@ -26,7 +26,7 @@ class Airing:
         seconds = period_in_hours * 60 * 60
         check_time = datetime.timestamp(datetime.now() + timedelta(seconds=seconds))
         sql = f'SELECT * ' \
-              f'FROM anime_notifications WHERE airing < {check_time}'
+              f'FROM anime_notifications WHERE airing < {check_time} ORDER BY airing ASC'
         self.cursor.execute(sql)
         return self.cursor.fetchall()
 
