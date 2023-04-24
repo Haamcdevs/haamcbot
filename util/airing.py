@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import mysql.connector
 
@@ -17,9 +17,16 @@ class Airing:
         self.cursor = database.cursor(dictionary=True)
 
     def load_current_notifications(self):
-        database.commit()
         check_time = datetime.timestamp(datetime.now())
         sql = f'SELECT * FROM anime_notifications WHERE airing < {check_time}'
+        self.cursor.execute(sql)
+        return self.cursor.fetchall()
+
+    def load_upcoming(self, period_in_hours=24):
+        seconds = period_in_hours * 60 * 60
+        check_time = datetime.timestamp(datetime.now() + timedelta(seconds=seconds))
+        sql = f'SELECT * ' \
+              f'FROM anime_notifications WHERE airing < {check_time}'
         self.cursor.execute(sql)
         return self.cursor.fetchall()
 
