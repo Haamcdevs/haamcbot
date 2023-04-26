@@ -20,20 +20,13 @@ class JoinMessage(Cog):
         channel = member.guild.get_channel_or_thread(config.channel['welcome'])
         await self.send_welcome(channel, member)
 
-    # @welcome.command()
-    # async def test(self, ctx: Context):
-    #     member = ctx.author
-    #     channel = ctx.guild.get_channel_or_thread(config.channel['welcome'])
-    #     await self.send_welcome(channel, member)
-    #     await ctx.send('done', ephemeral=True)
-
     async def send_welcome(self, channel, member):
         await asyncio.sleep(3)
         await channel.send(
             f'Welkom {member.mention}, ik ben Rory, de mascotte van {member.guild.name}!\n'
             f'Voor dat je de hele server kunt zien, moet je eerst twee vragen beantwoorden.\n\n'
             f':one: Wat is je **favoriete serie**?\n\n'
-            f':two: **Hoe of waar** heb je ons gevonden?'
+            f':two: **Hoe, waar of via welke user** heb je ons gevonden?'
         )
 
 
