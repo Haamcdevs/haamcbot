@@ -1,4 +1,6 @@
 import re
+
+import mysql
 from discord.ext import tasks, commands
 from discord.ext.commands import Context, Bot
 
@@ -76,7 +78,13 @@ class Notifications(commands.Cog):
         if not self.ctx.is_ready():
             return
         # Update the anime schedule
-        for notification in self.airing.load_current_notifications():
+        try:
+            notifications = self.airing.load_current_notifications()
+        except mysql.connector.errors.DatabaseError:
+            print('Db connection failed')
+            await self.reconnect_db()
+            return
+        for notification in notifications:
             anime = await AnimeClient().by_id(notification['anime_id'])
             if anime is not None:
                 guild = self.ctx.get_guild(notification['guild_id'])
