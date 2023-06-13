@@ -5,6 +5,7 @@ import time
 import discord
 
 from discord.ext import commands
+from extensions.chatgpt import generate_chat_response
 
 import config
 from view.ChannelView import ChannelView
@@ -34,6 +35,9 @@ async def on_message(msg):
             ))
     if msg.author.bot:
         return
+    if bot.user.mention in msg.content.split():
+        completion = await generate_chat_response(msg, bot)
+        await msg.channel.send(completion)
     # Required to process commands
     await bot.process_commands(msg)
 
