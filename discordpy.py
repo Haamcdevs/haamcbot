@@ -35,7 +35,7 @@ async def on_message(msg):
             ))
     if msg.author.bot:
         return
-    if bot.user.mention in msg.content.split():
+    if msg.author.get_role(config.role['global_mod']) is not None and bot.user.mention in msg.content.split():
         completion = await generate_chat_response(msg, bot)
         await msg.channel.send(completion)
     # Required to process commands

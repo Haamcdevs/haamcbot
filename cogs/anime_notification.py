@@ -75,7 +75,6 @@ class Notifications(commands.Cog):
 
     @tasks.loop(seconds=60)
     async def notify_anime_channel(self):
-        print('anime notification: Running anime notification')
         if not self.ctx.is_ready():
             print('anime notification: Context not ready')
             return
@@ -87,9 +86,7 @@ class Notifications(commands.Cog):
             await self.reconnect_db()
             return
         for notification in notifications:
-            print(f"Loading anime with id {notification['anime_id']}")
             anime = await AnimeClient().by_id(notification['anime_id'])
-            print(f"Loading completed for anime with id {notification['anime_id']}")
             if anime is not None:
                 guild = self.ctx.get_guild(notification['guild_id'])
                 if guild.get_channel_or_thread(notification['channel_id']) is None:
@@ -103,14 +100,13 @@ class Notifications(commands.Cog):
             channel = guild.get_channel_or_thread(notification['channel_id'])
             if channel is not None:
                 anime_post = await channel.send(f"Aflevering **{notification['episode']}** van **{notification['anime_name']}** is uit sinds <t:{notification['airing']}:R>.")
-                await anime_post.add_reaction('one')
-                await anime_post.add_reaction('two')
-                await anime_post.add_reaction('three')
-                await anime_post.add_reaction('four')
-                await anime_post.add_reaction('five')
+                await anime_post.add_reaction('1️⃣')
+                await anime_post.add_reaction('2️⃣')
+                await anime_post.add_reaction('3️⃣')
+                await anime_post.add_reaction('4️⃣')
+                await anime_post.add_reaction('5️⃣')
                 print(f"anime notification: Episode **{notification['episode']}** of **{notification['anime_name']}** airing notification sent")
             self.airing.remove_notification(notification['id'])
-        print('anime notification: Done')
 
     @tasks.loop(hours=24)
     async def reconnect_db(self):
