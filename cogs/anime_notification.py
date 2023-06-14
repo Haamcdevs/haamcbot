@@ -76,12 +76,13 @@ class Notifications(commands.Cog):
     @tasks.loop(seconds=60)
     async def notify_anime_channel(self):
         if not self.ctx.is_ready():
+            print('anime notification: Context not ready')
             return
         # Update the anime schedule
         try:
             notifications = self.airing.load_current_notifications()
         except mysql.connector.errors.DatabaseError:
-            print('Db connection failed')
+            print('anime notification: Db connection failed')
             await self.reconnect_db()
             return
         for notification in notifications:
@@ -91,20 +92,25 @@ class Notifications(commands.Cog):
                 if guild.get_channel_or_thread(notification['channel_id']) is None:
                     self.airing.clear_channel(notification['channel_id'])
                     continue
-                print(f"Updating anime schedule {notification['anime_id']}")
+                print(f"anime notification: Updating anime schedule {notification['anime_id']}")
                 self.airing.add_notifications_to_channel(notification['channel_id'], notification['guild_id'], anime)
         # Re-fetch notifications after update
         for notification in self.airing.load_current_notifications():
             guild = self.ctx.get_guild(notification['guild_id'])
             channel = guild.get_channel_or_thread(notification['channel_id'])
             if channel is not None:
-                await channel.send(f"Aflevering **{notification['episode']}** van **{notification['anime_name']}** is uit sinds <t:{notification['airing']}:R>.")
-                print(f"Episode **{notification['episode']}** of **{notification['anime_name']}** airing notification sent")
+                anime_post = await channel.send(f"Aflevering **{notification['episode']}** van **{notification['anime_name']}** is uit sinds <t:{notification['airing']}:R>.")
+                await anime_post.add_reaction('1️⃣')
+                await anime_post.add_reaction('2️⃣')
+                await anime_post.add_reaction('3️⃣')
+                await anime_post.add_reaction('4️⃣')
+                await anime_post.add_reaction('5️⃣')
+                print(f"anime notification: Episode **{notification['episode']}** of **{notification['anime_name']}** airing notification sent")
             self.airing.remove_notification(notification['id'])
 
     @tasks.loop(hours=24)
     async def reconnect_db(self):
-        print('Reconnecting airing database')
+        print('anime notification: Reconnecting airing database')
         self.airing.reconnect()
 
 
