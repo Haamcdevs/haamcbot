@@ -44,7 +44,8 @@ class Notifications(commands.Cog):
             await ctx.send(f'Geen volgende aflevering gevonden voor dit kanaal', ephemeral=True)
             return
         notification = notifications[0]
-        await ctx.send(f"Aflevering **{notification['episode']}** van **{notification['anime_name']}** komt uit <t:{notification['airing']}:R>.")
+        name = notification['anime_name'].decode('utf-8')
+        await ctx.send(f"Aflevering **{notification['episode']}** van **{name}** komt uit <t:{notification['airing']}:R>.")
 
     @commands.has_role(config.role['global_mod'])
     @commands.has_role(config.role['anime_mod'])
@@ -99,7 +100,8 @@ class Notifications(commands.Cog):
             guild = self.ctx.get_guild(notification['guild_id'])
             channel = guild.get_channel_or_thread(notification['channel_id'])
             if channel is not None:
-                anime_post = await channel.send(f"Aflevering **{notification['episode']}** van **{notification['anime_name']}** is uit sinds <t:{notification['airing']}:R>.")
+                name = notification['anime_name'].decode('utf-8')
+                anime_post = await channel.send(f"Aflevering **{notification['episode']}** van **{name}** is uit sinds <t:{notification['airing']}:R>.\nWat vind jij van deze aflevering?")
                 await anime_post.add_reaction('1️⃣')
                 await anime_post.add_reaction('2️⃣')
                 await anime_post.add_reaction('3️⃣')

@@ -5,6 +5,8 @@ import time
 import discord
 
 from discord.ext import commands
+from discord.ext.commands import Context
+
 from extensions.chatgpt import generate_chat_response
 
 import config
@@ -36,7 +38,7 @@ async def on_message(msg):
     if msg.author.bot:
         return
     if msg.author.get_role(config.role['global_mod']) is not None and bot.user.mention in msg.content.split():
-        completion = await generate_chat_response(msg, bot)
+        completion = await generate_chat_response(msg.content, msg.channel, msg.author, bot)
         await msg.channel.send(completion)
     # Required to process commands
     await bot.process_commands(msg)
