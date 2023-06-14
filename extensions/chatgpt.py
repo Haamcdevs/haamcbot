@@ -19,7 +19,7 @@ async def generate_chat_response(message, bot):
         {"role": "system", "content": "You can only speak Dutch, but don't translate titles to dutch."},
         {"role": "system", "content": "You can use markdown."},
         {"role": "system", "content": "You always answer in a gender neutral way."},
-        {"role": "system", "content": "You are the mascotte of a discord server called HAAMC."},
+        {"role": "system", "content": "You are the mascot of a discord server called HAAMC."},
         {"role": "system", "content": "HAAMC stands for Holland's Anime And Manga Club."},
         {"role": "user", "content": content}
     ]
