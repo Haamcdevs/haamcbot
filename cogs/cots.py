@@ -71,7 +71,7 @@ class CotsNomination(object):
         character = await self.get_character(anime)
         #voice_actor = next(v for v in character['voice_actors'] if v['language'] == 'Japanese')
         return f":mens: **{character['name']}**, *{anime['name']}*" \
-               f"\nvotes: **{self.votes}** | door: {self.message.author.name}"
+               f"\nvotes: **{self.votes}** | door: {self.message.author.display_name}"
 
 
 class Cots(commands.Cog):
@@ -152,13 +152,17 @@ class Cots(commands.Cog):
 
     @cots.command()
     async def ranking(self, ctx):
+        print('cots ranking')
         nominations = await self.get_ranked_nominations(ctx)
+        print(nominations)
         msg = []
         for i, n in enumerate(nominations):
+            print(await n.to_string())
             msg.append(f"{i + 1}) " + await n.to_string())
             if len(msg) == 10:
                 await ctx.message.channel.send("\n".join(msg))
                 msg = []
+        print(msg)
         if len(msg) > 0:
             await ctx.message.channel.send("\n".join(msg))
         ctx.send('Here is the character of the season current ranking', ephemeral=True)
@@ -187,7 +191,7 @@ class Cots(commands.Cog):
         anime = await winner.get_anime()
         character = await winner.get_character(anime)
         msg = f":trophy: Het character van {self.get_season()} is **{character['name']}**! van {anime['name']}\n" \
-              f"Genomineerd door {winner.message.author.name}\n" \
+              f"Genomineerd door {winner.message.author.mention}\n" \
               f"https://anilist.co/character/{character['id']}"
         await channel.send(msg)
         await channel.set_permissions(
