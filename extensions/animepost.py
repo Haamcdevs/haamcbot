@@ -33,14 +33,15 @@ class AnimeForm(Modal):
         if len(self.anime['airdates']) and self.anime['airdates'][0]['episode'] == 1:
             first_episode = f"<t:{self.anime['airdates'][0]['time']}:R>"
         episodes = ''
-        if self.anime['episodes'] is not None:
-            episodes = f'**Episodes: **{self.anime["episodes"]}\n'
-        content = f'{self.anime["description"]}\n' \
-                  f'**First episode: **{first_episode}\n' \
+        if self.anime["episodes"] is not None:
+            episodes = f'* **Episodes: **{self.anime["episodes"]}\n'
+        content = f'# {self.anime["name"]}\n' \
+                  f'{self.anime["description"]}\n' \
+                  f'* **First episode**: {first_episode}\n' \
                   f'{episodes}' \
-                  f'{self.anime["image"]}\n' \
-                  f'<{self.anilist_link}>\n' \
-                  f'{self.youtube.value}'
+                  f'* **Anilist**: <{self.anilist_link}>\n' \
+                  f'* **Image**: {self.anime["image"]}\n' \
+                  f'* **Trailer**: {self.youtube.value}'
         tags = []
         filtered = filter(self.filter_tags, forum.available_tags)
         for tag in filtered:

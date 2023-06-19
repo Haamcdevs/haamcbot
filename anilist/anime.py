@@ -93,7 +93,7 @@ class AnimeClient:
         return {
             'id': media['id'],
             'name': title,
-            'episodes': media['episodes'],
+            'episodes': media['episodes'] or len(media["airingSchedule"]["edges"]),
             'trailer': trailer,
             'genres': media['genres'],
             'season_year': media['seasonYear'],
