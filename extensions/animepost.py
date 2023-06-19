@@ -35,8 +35,7 @@ class AnimeForm(Modal):
         episodes = ''
         if self.anime["episodes"] is not None:
             episodes = f'* **Episodes: **{self.anime["episodes"]}\n'
-        content = f'# {self.anime["name"]}\n' \
-                  f'{self.anime["description"]}\n' \
+        content = f'{self.anime["description"]}\n' \
                   f'* **First episode**: {first_episode}\n' \
                   f'{episodes}' \
                   f'* **Anilist**: <{self.anilist_link}>\n' \
