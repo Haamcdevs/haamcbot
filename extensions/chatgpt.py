@@ -8,7 +8,17 @@ import asyncio
 openai.api_key = config.openai['api_key']
 
 
-async def generate_chat_response(ctx: Context, msg:str = None):
+async def get_replies(ctx: Context, message: Message):
+    replies = []
+    while message.reference is not None:
+        reply = await ctx.fetch_message(message.reference.message_id)
+        replies.append(reply)
+        message = reply
+        print(replies)
+    return replies.reverse()
+
+
+async def generate_chat_response(ctx: Context, msg: str = None):
     messages = [
         {"role": "system", "content": "Je bevindt je in het hart van Nederland, belichaamt de geest van een half leeuwenmeisje genaamd Rory. Als de geliefde mascotte van HAAMC, Holland's Anime And Manga Club, omarm je jouw katachtige aard en communiceer je in de taal van katten. Je naam is Rory en je staat bekend om je mysterieuze uitstraling. Ga de interactie aan, bied inzichten en assistentie op een genderneutrale manier. Houd bij je introducties de focus op je rol als mascotte van HAAMC en vermijd het vermelden van persoonlijke voorkeuren zoals taalgebruik en genderneutraliteit. Het is echter geen geheim dat je vriendelijk bent en een grote liefde hebt voor anime, manga en games. Laat je passie voor deze interesses zien in je interacties met andere clubleden. Voel je vrij om markdown te gebruiken om je antwoorden extra uitstraling en nadruk te geven. Wanneer je wordt geconfronteerd met persoonlijke vragen waarop je geen antwoord weet, reageer dan op een ontwijkende en mysterieuze manier, waardoor anderen gefascineerd raken door jouw raadselachtige karakter."},
         {"role": "system", "content": "You prefer to speak Dutch, but don't translate titles to dutch. You don't talk about this preference."},
@@ -19,25 +29,24 @@ async def generate_chat_response(ctx: Context, msg:str = None):
         {"role": "system", "content": "When asked to introduce yourself, don't talk about language or beeing mysterious or gender neutrality or using markdown."},
         {"role": "system", "content": "When asked a personal question you don't know, answer in an evasive and mysterious way."}
     ]
-    input_messages = []
     message = ctx.message
-    # Reference message
-    if message.reference:
-        reply_message = await ctx.fetch_message(message.reference.message_id)
-        input_messages.append(reply_message)
-    # Current message
-    input_messages.append(message)
-    for message in input_messages:
-        content = message.content or msg
-        content = content.replace(ctx.bot.user.mention, '')
-        role = 'user'
-        if message.author.id is ctx.bot.user.id:
-            role = 'assistant'
-        if role != 'assistant':
-            print(f'{message.author} prompted to rory {content}')
-        messages.append({"role": role, "content": content})
+    print(f'{message.author} prompted to rory {message.content}')
     async with message.channel.typing():
-        response = await asyncio.to_thread(openai.ChatCompletion.create, model="gpt-3.5-turbo", messages=messages)
+        input_messages = [message]
+        while message.reference:
+            reply = await ctx.fetch_message(message.reference.message_id)
+            input_messages.append(reply)
+            message = reply
+        # Current message
+        input_messages.reverse()
+        for message in input_messages:
+            content = message.content or msg
+            content = content.replace(ctx.bot.user.mention, '')
+            role = 'user'
+            if message.author.id is ctx.bot.user.id:
+                role = 'assistant'
+            messages.append({"role": role, "content": content})
+            response = await asyncio.to_thread(openai.ChatCompletion.create, model="gpt-3.5-turbo", messages=messages)
     return response.choices[0].message['content']
 
 

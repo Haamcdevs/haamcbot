@@ -3,6 +3,7 @@
 import os
 import time
 import discord
+from discord import Message
 
 from discord.ext import commands
 from discord.ext.commands import Context
@@ -24,7 +25,7 @@ async def on_ready():
 
 
 @bot.event
-async def on_message(msg):
+async def on_message(msg: Message):
     # Writes logs away in folder logs/servername/channelname_date.log
     if config.logging_enabled:
         logfile = 'logs/{}/{}_{}.log'.format(msg.guild, msg.channel, time.strftime('%Y-%m-%d'))
@@ -40,7 +41,7 @@ async def on_message(msg):
     if msg.author.get_role(config.role['global_mod']) is not None and bot.user.mention in msg.content.split():
         ctx = await bot.get_context(msg)
         completion = await generate_chat_response(ctx)
-        await msg.channel.send(completion)
+        await ctx.reply(completion, mention_author=False)
     # Required to process commands
     await bot.process_commands(msg)
 
