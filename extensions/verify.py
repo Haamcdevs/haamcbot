@@ -33,7 +33,7 @@ async def verify(ctx: Context, user: str):
 
 @bot.tree.context_menu(name='Verify User')
 async def verify_user(interaction: discord.Interaction, user: discord.Member):
-    if user.get_role(config.role['global_mod']) is None:
+    if interaction.user.get_role(config.role['global_mod']) is None:
         print(f'User {interaction.user} tried to verify {user}, no permissions')
         await interaction.response.send_message(f':no_entry: This command is for moderators only.', ephemeral=True, delete_after=3)
         return
