@@ -35,15 +35,15 @@ async def verify(ctx: Context, user: str):
 async def verify_user(interaction: discord.Interaction, user: discord.Member):
     if user.get_role(config.role['global_mod']) is None:
         print(f'User {interaction.user} tried to verify {user}, no permissions')
-        await interaction.response.send_message(f'Antwoord op de vragen en heb even geduld voor verificatie {interaction.user.mention}.', ephemeral=True)
+        await interaction.response.send_message(f':no_entry: This command is for moderators only.', ephemeral=True, delete_after=3)
         return
     role = interaction.guild.get_role(config.role['user'])
     if role in user.roles:
-        await interaction.response.send_message(f':x: Member {user.mention} is already verified', ephemeral=True)
+        await interaction.response.send_message(f':x: Member {user.mention} is already verified', ephemeral=True, delete_after=10)
         return
     await user.add_roles(role, reason=f'User verified by {interaction.user}')
     channel = interaction.guild.get_channel_or_thread(config.channel['general'])
-    await interaction.response.send_message(f':white_check_mark: Verified member {user.mention}', ephemeral=True)
+    await interaction.response.send_message(f':white_check_mark: Verified member {user.mention}', ephemeral=True, delete_after=10)
     emoji = [emote for emote in interaction.guild.emojis if emote.name == 'pikawave'][0]
     print(f'User {user} verified by {interaction.user}')
     await channel.send(
