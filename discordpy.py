@@ -17,7 +17,6 @@ intents = discord.Intents.default()
 bot = commands.Bot(command_prefix='/', description='Rory bot, haamc private', intents=intents.all())
 
 
-
 @bot.event
 async def on_ready():
     await bot.tree.sync()
