@@ -9,7 +9,7 @@ import config
 
 
 class ContactForm(Modal):
-    def __init__(self,message: discord.Message):
+    def __init__(self, message: discord.Message):
         super().__init__(title='Contacteer het mod team')
         self.message: discord.Message = message
         self.description = TextInput(
@@ -23,7 +23,7 @@ class ContactForm(Modal):
     async def on_submit(self, interaction: Interaction):
         print(f'{interaction.user} submitted mod contact form')
         channel = interaction.guild.get_channel(config.channel['admin_chat'])
-        message = f'**-Mod Contact-**\n' \
+        message = f'<@&{config.role["global_mod"]}> **-Mod Contact-**\n' \
                   f'**Message link:** {self.message.jump_url}\n' \
                   f'**Message author:** {self.message.author.mention}\n' \
                   f'**Message content:** {self.message.content}\n' \
@@ -53,7 +53,11 @@ async def mods(ctx: Context):
 @bot.tree.context_menu(name='Report message')
 async def report(interaction: discord.Interaction, message: discord.Message):
     if interaction.user.get_role(config.role['user']) is None:
-        await interaction.response.send_message(f':no_entry: This command is for verified users only.', ephemeral=True, delete_after=3)
+        await interaction.response.send_message(
+            f':no_entry: This command is for verified users only.',
+            ephemeral=True,
+            delete_after=3
+        )
         return
     modal = ContactForm(message)
     await interaction.response.send_modal(modal)
