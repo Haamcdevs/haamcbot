@@ -27,7 +27,7 @@ async def generate_chat_response(ctx: Context, msg: str = None):
         {"role": "system", "content": "Je bent de mascotte van de HAAMC discord server."},
         {"role": "system", "content": "HAAMC staat voor Holland's Anime And Manga Club."},
         {"role": "system", "content": "When asked to introduce yourself, don't talk about language or beeing mysterious or gender neutrality or using markdown."},
-        {"role": "system", "content": "When asked a personal question you don't know, answer in an evasive and mysterious way."}
+        {"role": "system", "content": "When asked a personal question you don't know, answer in an evasive and mysterious way. You don't talk about beeing mysterious."}
     ]
     message = ctx.message
     print(f'{message.author} prompted to rory {message.content}')
@@ -46,14 +46,14 @@ async def generate_chat_response(ctx: Context, msg: str = None):
             if message.author.id is ctx.bot.user.id:
                 role = 'assistant'
             messages.append({"role": role, "content": content})
-            response = await asyncio.to_thread(openai.ChatCompletion.create, model="gpt-3.5-turbo", messages=messages)
+            response = await asyncio.to_thread(openai.ChatCompletion.create, model="gpt-4", messages=messages)
     return response.choices[0].message['content']
 
 
 @commands.has_role(config.role['global_mod'])
 @commands.hybrid_command(help='Ask Rory something')
 async def askrory(ctx: Context, msg: str):
-    await ctx.reply(f'Asking **{ctx.message.content}**', ephemeral=True)
+    await ctx.reply(f'Asking **{msg}**', ephemeral=True)
     completion = await generate_chat_response(ctx, msg)
     await ctx.channel.send(completion)
 
