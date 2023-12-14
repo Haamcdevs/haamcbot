@@ -225,5 +225,5 @@ class Sotw(commands.Cog):
         await ctx.interaction.response.send_modal(SotwNominationModal())
 
 
-async def setup(bot):
-    await bot.add_cog(Sotw(bot))
+# async def setup(bot):
+#     await bot.add_cog(Sotw(bot))
