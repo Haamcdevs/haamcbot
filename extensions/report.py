@@ -8,21 +8,25 @@ from discordpy import bot
 import config
 
 
-class ContactForm(Modal):
-    def __init__(self):
-        super().__init__(title='Contacteer het mod team')
+class LogModal(Modal):
+    def __init__(self, message: discord.Message):
+        super().__init__(title='Rapporteer een bericht het mod team')
+        self.message: discord.Message = message
         self.description = TextInput(
-            label='Contacteer het mod team',
-            placeholder='Zet hier je bericht',
+            label='Wat is er aan de hand',
+            placeholder='Leg hier uit wat er aan de hand is',
             style=TextStyle.long,
             max_length=1900
         )
         self.add_item(self.description)
 
     async def on_submit(self, interaction: Interaction):
-        print(f'{interaction.user} submitted mod contact form')
+        print(f'{interaction.user} submitted message report form')
         channel = interaction.guild.get_channel(config.channel['admin_chat'])
         message = f'<@&{config.role["global_mod"]}> **-Mod Contact-**\n' \
+                  f'**Message link:** {self.message.jump_url}\n' \
+                  f'**Message author:** {self.message.author.mention}\n' \
+                  f'**Message content:** {self.message.content}\n' \
                   f'**Reporter:** {interaction.user.mention}\n' \
                   f'**Comment:** {self.description.value}\n'
 
@@ -35,16 +39,8 @@ class ContactForm(Modal):
             ephemeral=True
         )
 
-
-@commands.hybrid_command(help='Send a message to our mod team')
-@commands.has_role(config.role['user'])
-async def contact_mods(ctx: Context):
-    modal = ContactForm()
-    await ctx.interaction.response.send_modal(modal)
-
-
-@bot.tree.context_menu(name='Contact moderators')
-async def contact(interaction: discord.Interaction, message: discord.Message):
+@bot.tree.context_menu(name='Report message')
+async def report(interaction: discord.Interaction, message: discord.Message):
     if interaction.user.get_role(config.role['user']) is None:
         await interaction.response.send_message(
             f':no_entry: This command is for verified users only.',
@@ -52,10 +48,9 @@ async def contact(interaction: discord.Interaction, message: discord.Message):
             delete_after=3
         )
         return
-    modal = ContactForm()
+    modal = LogModal(message)
     await interaction.response.send_modal(modal)
 
 
 async def setup(bot):
-    bot.add_command(contact_mods)
-    bot.tree.add_command(contact)
+    bot.tree.add_command(report)
