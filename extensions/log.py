@@ -32,9 +32,10 @@ class LogModal(Modal):
         self.add_item(self.action)
         self.agreement = TextInput(
             label='Welke afspraken zijn gemaakt',
-            placeholder='Voorwaarden in DM afgesproken etc',
+            placeholder='Voorwaarden in DM afgesproken indien van toepassing',
             style=TextStyle.long,
-            max_length=1900
+            max_length=1900,
+            required=False
         )
         self.add_item(self.agreement)
 
