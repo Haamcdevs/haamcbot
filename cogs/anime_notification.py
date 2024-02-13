@@ -88,13 +88,15 @@ class Notifications(commands.Cog):
             return
         for notification in notifications:
             anime = await AnimeClient().by_id(notification['anime_id'])
-            if anime is not None:
-                guild = self.ctx.get_guild(notification['guild_id'])
-                if guild.get_channel_or_thread(notification['channel_id']) is None:
-                    self.airing.clear_channel(notification['channel_id'])
-                    continue
-                print(f"anime notification: Updating anime schedule {notification['anime_id']}")
-                self.airing.add_notifications_to_channel(notification['channel_id'], notification['guild_id'], anime)
+            if anime is None:
+                print(f"Failed loading anime schedule for anime with id (AniList fucked up) {notification['anime_id']}")
+                continue
+            guild = self.ctx.get_guild(notification['guild_id'])
+            if guild.get_channel_or_thread(notification['channel_id']) is None:
+                self.airing.clear_channel(notification['channel_id'])
+                continue
+            print(f"anime notification: Updating anime schedule {notification['anime_id']}")
+            self.airing.add_notifications_to_channel(notification['channel_id'], notification['guild_id'], anime)
         # Re-fetch notifications after update
         for notification in self.airing.load_current_notifications():
             guild = self.ctx.get_guild(notification['guild_id'])
