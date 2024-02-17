@@ -22,11 +22,20 @@ class Airing:
         self.cursor.execute(sql)
         return self.cursor.fetchall()
 
-    def load_upcoming(self, period_in_hours=24):
+    def load_upcoming(self, period_in_hours=24, offset: int = None):
         seconds = period_in_hours * 60 * 60
         check_time = datetime.timestamp(datetime.now() + timedelta(seconds=seconds))
+        offset_condition = f'airing < {check_time}'
+        if offset is not None:
+            single_day_in_seconds = 24 * 60 * 60
+            start_time = single_day_in_seconds * offset
+            start_dt = datetime.timestamp(datetime.now() + timedelta(seconds=start_time))
+            end_dt = datetime.timestamp(datetime.now() + timedelta(seconds=start_time + single_day_in_seconds))
+            offset_condition = f'airing < {end_dt} AND airing > {start_dt}'
         sql = f'SELECT * ' \
-              f'FROM anime_notifications WHERE airing < {check_time} ORDER BY airing ASC'
+              f'FROM anime_notifications ' \
+              f'WHERE {offset_condition} ' \
+              f'ORDER BY airing ASC'
         self.cursor.execute(sql)
         return self.cursor.fetchall()
 

@@ -83,6 +83,8 @@ class AnimeClient:
 
     def anime_def(self, response):
         media = response['data']['Media']
+        if media is None:
+            return None
         trailer = None
         if media['trailer'] is not None:
             trailer = 'https://www.youtube.com/watch?v=' + media['trailer']['id']
