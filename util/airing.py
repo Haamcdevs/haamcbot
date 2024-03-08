@@ -77,5 +77,10 @@ class Airing:
                 airdate['time']
             )
 
+    def load_anime_by_anime_id(self, anime_id: int):
+        sql = f'SELECT * FROM anime_notifications WHERE anime_id = {anime_id} LIMIT 1'
+        self.cursor.execute(sql)
+        return self.cursor.fetchone() or None
+
     def reconnect(self):
         database.reconnect(10, 5)

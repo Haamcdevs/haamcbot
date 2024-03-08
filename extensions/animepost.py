@@ -64,6 +64,13 @@ class AnimeForm(Modal):
 async def anime_post(ctx: Context, anilist_link):
     try:
         anilist_id = re.search(r'anime/(\d+)', anilist_link)[1]
+        airing = Airing().load_anime_by_anime_id(int(anilist_id))
+        # Check if there is a channel already
+        if airing is not None:
+            channel_id = airing['channel_id']
+            await ctx.reply(f':x: Anime post <#{channel_id}> bestaat al.', ephemeral=True)
+            return
+
     except TypeError:
         await ctx.send(':x: Invalid anilist url', ephemeral=True)
         return
