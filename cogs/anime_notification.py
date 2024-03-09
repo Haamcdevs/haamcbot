@@ -1,5 +1,6 @@
 import re
 
+import discord
 import mysql
 from discord.ext import tasks, commands
 from discord.ext.commands import Context, Bot
@@ -111,6 +112,15 @@ class Notifications(commands.Cog):
                 await anime_post.add_reaction('5️⃣')
                 print(f"anime notification: Episode **{notification['episode']}** of **{notification['anime_name']}** airing notification sent")
             self.airing.remove_notification(notification['id'])
+        if 'notification' not in locals() or 'name' not in locals():
+            return
+        try:
+            activity = discord.Activity(name=f"{name} ep {notification['episode']}", type=discord.ActivityType.watching)
+            await self.ctx.change_presence(status=discord.Status.online, activity=activity)
+        except Exception as e:
+            print("Failed to set watching status")
+            return
+
 
     @tasks.loop(hours=24)
     async def reconnect_db(self):
