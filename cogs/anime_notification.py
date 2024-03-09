@@ -115,7 +115,7 @@ class Notifications(commands.Cog):
         if 'notification' not in locals() or 'name' not in locals():
             return
         try:
-            activity = discord.Activity(name=f"{name} ep {notification['episode']}", type=discord.ActivityType.watching)
+            activity = discord.Activity(name='anime', state=f"{name} ep. {notification['episode']}", type=discord.ActivityType.watching)
             await self.ctx.change_presence(status=discord.Status.online, activity=activity)
         except Exception as e:
             print("Failed to set watching status")
