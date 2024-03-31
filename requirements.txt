@@ -27,7 +27,7 @@ msgpack==1.0.5
 multidict==6.0.4
 mysql-connector-python==8.0.33
 numpy==1.24.3
-openai==0.27.7
+openai==1.14.3
 packaging==23.1
 pluggy==1.0.0
 protobuf==3.20.3

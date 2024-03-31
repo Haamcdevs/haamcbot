@@ -2,10 +2,11 @@ import openai
 from discord import Message
 from discord.ext import commands
 from discord.ext.commands import Context
+from openai import OpenAI
+
 import config
 import asyncio
 
-openai.api_key = config.openai['api_key']
 
 
 async def get_replies(ctx: Context, message: Message):
@@ -46,8 +47,12 @@ async def generate_chat_response(ctx: Context, msg: str = None):
             if message.author.id is ctx.bot.user.id:
                 role = 'assistant'
             messages.append({"role": role, "content": content})
-            response = await asyncio.to_thread(openai.ChatCompletion.create, model="gpt-4", messages=messages)
-    return response.choices[0].message['content']
+            client = OpenAI(
+                # defaults to os.environ.get("OPENAI_API_KEY")
+                api_key=config.openai['api_key'],
+            )
+            response = await asyncio.to_thread(client.chat.completions.create, model="gpt-4", messages=messages)
+    return response.choices[0].message.content
 
 
 @commands.has_role(config.role['global_mod'])
