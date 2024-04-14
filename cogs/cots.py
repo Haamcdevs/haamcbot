@@ -71,7 +71,7 @@ class CotsNomination(object):
         character = await self.get_character(anime)
         #voice_actor = next(v for v in character['voice_actors'] if v['language'] == 'Japanese')
         return f":mens: **{character['name']}**, *{anime['name']}*" \
-               f"\nvotes: **{self.votes}** | door: {self.message.author.display_name}"
+               f"\nvotes: **{self.votes}** | door: {self.message.author.mention}"
 
 
 class Cots(commands.Cog):
@@ -152,19 +152,15 @@ class Cots(commands.Cog):
 
     @cots.command()
     async def ranking(self, ctx):
-        print('cots ranking')
         nominations = await self.get_ranked_nominations(ctx)
-        print(nominations)
         msg = []
         for i, n in enumerate(nominations):
-            print(await n.to_string())
             msg.append(f"{i + 1}) " + await n.to_string())
             if len(msg) == 10:
-                await ctx.message.channel.send("\n".join(msg))
+                await ctx.send("\n".join(msg), ephemeral=True)
                 msg = []
-        print(msg)
         if len(msg) > 0:
-            await ctx.message.channel.send("\n".join(msg))
+            await ctx.send("\n".join(msg), ephemeral=True)
         ctx.send('Here is the character of the season current ranking', ephemeral=True)
 
     @cots.command()
