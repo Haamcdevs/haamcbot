@@ -9,6 +9,7 @@ from discord.app_commands import Choice
 from discord.ext import commands
 import mysql.connector
 from discord.ext.commands import Context
+import numpy as np
 
 import config
 
@@ -159,7 +160,7 @@ class Sots(commands.Cog):
 
         # Build a dict of the winner for the win message and database insertion
         winners = nominations[:3]
-        await ctx.send(await self.forum(nominations))
+        await ctx.send(await self.forum(winners))
         icons = {
             0: ':first_place:',
             1: ':second_place:',
