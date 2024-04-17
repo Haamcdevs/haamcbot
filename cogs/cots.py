@@ -3,6 +3,7 @@ import asyncio
 import operator
 from typing import List
 
+import discord
 import requests
 from discord.app_commands import Choice
 from discord.ext import commands
@@ -24,6 +25,7 @@ class CotsNomination(object):
     def __init__(self, message, season):
         self.message = message
         self.season = season
+        self.anime = None
         try:
             self.votes = message.reactions[0].count - 1
         except IndexError:
@@ -36,7 +38,10 @@ class CotsNomination(object):
             return False
 
     async def get_anime(self):
-        return await AnimeClient().by_id(self.parse_id('anime')) or False
+        if self.anime is not None:
+            return self.anime
+        self.anime = await AnimeClient().by_id(self.parse_id('anime')) or False
+        return self.anime
 
     async def get_character(self, anime):
         character = filter(lambda char: char['id'] == self.parse_id('character'), anime['characters'])
@@ -73,6 +78,62 @@ class CotsNomination(object):
         return f":mens: **{character['name']}**, *{anime['name']}*" \
                f"\nvotes: **{self.votes}** | door: {self.message.author.display_name}"
 
+    async def create_embed(self):
+        anime = await self.get_anime()
+        character = await self.get_character(anime)
+        embed = discord.Embed(
+            title=character['name'],
+            url=f"https://anilist.co/character/{character['id']}"
+        )
+        anime_link = f"[{anime['name']}](https://anilist.co/anime/{anime['id']})"
+        embed.add_field(name='Anime', value=anime_link, inline=False)
+        embed.add_field(name='Description', value=character['description'], inline=False)
+        embed.add_field(name='Nominated by', value=self.message.author.mention, inline=False)
+        embed.set_image(url=character['image'])
+
+        return embed
+
+class RichCotsNomination(object):
+    def __init__(self, message):
+        self.message = message
+        try:
+            self.votes = message.reactions[0].count - 1
+        except IndexError:
+            self.votes = 0
+
+    def field(self, name):
+        embed = self.message.embeds[0]
+        for field in embed.fields:
+            if field.name == name:
+                return field.value
+        return None
+
+    def character(self):
+        return self.message.embeds[0].title
+
+    def anime(self):
+        return self.unlink(self.field('Anime'))
+
+    def author(self):
+        return self.field('Nominated by')
+
+    def character_link(self):
+        return self.message.embeds[0].url
+
+    def unlink(self, text):
+        try:
+            return re.search(r'\[(.*)]', text)[1]
+        except TypeError:
+            return False
+
+    def to_string(self):
+        anime = self.anime()
+        character = self.character()
+        author = self.author()
+
+        return f":mens: **{character}**, *{anime}*" \
+               f"\nvotes: **{self.votes}** | door: {author}"
+
 
 class Cots(commands.Cog):
     def __init__(self, bot):
@@ -98,9 +159,9 @@ class Cots(commands.Cog):
         messages = [message async for message in channel.history(limit=100)]
         nominations = []
         for msg in messages:
-            if msg.author.bot:
+            if len(msg.reactions) == 0:
                 break
-            nominations.append(CotsNomination(msg, self.get_season()))
+            nominations.append(RichCotsNomination(msg))
         nominations.sort(key=operator.attrgetter('votes'), reverse=True)
         return nominations
 
@@ -142,30 +203,32 @@ class Cots(commands.Cog):
         except APIException as e:
             print(e)
             errors.append('Er ging iets fout bij het ophalen van de anime of het character')
+            return
         if len(errors):
             error_message = await message.channel.send("\n:x: " + "\n:x: ".join(errors))
             print(f"invalid cots nomination\n" + "\n".join(errors))
             await message.delete(delay=5)
             await error_message.delete(delay=5)
             return
-        await message.add_reaction('🔼')
+        embed = await nomination.create_embed()
+        embed_message = await message.channel.send(embed=embed)
+        await embed_message.add_reaction('🔼')
+        await message.delete()
 
     @cots.command()
-    async def ranking(self, ctx):
-        print('cots ranking')
+    async def ranking(self, ctx, offset: int = 0):
+        offset = offset * 10
         nominations = await self.get_ranked_nominations(ctx)
-        print(nominations)
+        nominations = nominations[offset:offset+10]
+        nominations = enumerate(nominations)
         msg = []
-        for i, n in enumerate(nominations):
-            print(await n.to_string())
-            msg.append(f"{i + 1}) " + await n.to_string())
-            if len(msg) == 10:
-                await ctx.message.channel.send("\n".join(msg))
-                msg = []
-        print(msg)
-        if len(msg) > 0:
-            await ctx.message.channel.send("\n".join(msg))
-        ctx.send('Here is the character of the season current ranking', ephemeral=True)
+        for i, n in nominations:
+            ranking = i + offset + 1
+            msg.append(f"{ranking}) " + n.to_string())
+        if len(msg) == 0:
+            await ctx.reply(':x: Geen nominaties met deze offset', ephemeral=True, delete_after=3)
+            return
+        await ctx.reply("\n".join(msg), ephemeral=True)
 
     @cots.command()
     @commands.has_role(config.role['global_mod'])
@@ -182,17 +245,19 @@ class Cots(commands.Cog):
         role = next(r for r in user.guild.roles if r.id == config.role['user'])
         msg = []
         for i, n in enumerate(nominations):
-            msg.append(f"{i + 1}) " + await n.to_string())
+            msg.append(f"{i + 1}) " + n.to_string())
             if len(msg) == 10:
                 await channel.send("\n".join(msg))
                 msg = []
         if len(msg) > 0:
             await channel.send("\n".join(msg))
-        anime = await winner.get_anime()
-        character = await winner.get_character(anime)
-        msg = f":trophy: Het character van {self.get_season()} is **{character['name']}**! van {anime['name']}\n" \
-              f"Genomineerd door {winner.message.author.mention}\n" \
-              f"https://anilist.co/character/{character['id']}"
+        character = winner.character()
+        character_link = winner.character_link()
+        author = winner.author()
+        anime = winner.anime()
+        msg = f":trophy: Het character van {self.get_season()} is **{character}**! van {anime}\n" \
+              f"Genomineerd door {author}\n" \
+              f"{character_link}"
         await channel.send(msg)
         await channel.set_permissions(
             role,

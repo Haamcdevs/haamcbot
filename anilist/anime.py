@@ -43,6 +43,7 @@ animeStructure = '''
       edges {
         node {
           id,
+          description,
           name {
             userPreferred
           },
@@ -122,6 +123,7 @@ class AnimeClient:
             characters.append({
                 'id': character['node']['id'],
                 'name': character['node']['name']['userPreferred'],
-                'image': character['node']['image']['large']
+                'image': character['node']['image']['large'],
+                'description': character['node']['description']
             })
         return characters
