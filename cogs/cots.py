@@ -87,7 +87,7 @@ class CotsNomination(object):
         )
         anime_link = f"[{anime['name']}](https://anilist.co/anime/{anime['id']})"
         embed.add_field(name='Anime', value=anime_link, inline=False)
-        embed.add_field(name='Description', value=character['description'], inline=False)
+        embed.add_field(name='Description', value=character['description'][0:1024], inline=False)
         embed.add_field(name='Nominated by', value=self.message.author.mention, inline=False)
         embed.set_image(url=character['image'])
 
