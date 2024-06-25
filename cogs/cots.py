@@ -81,13 +81,14 @@ class CotsNomination(object):
     async def create_embed(self):
         anime = await self.get_anime()
         character = await self.get_character(anime)
+        description = character['description'] or ''
         embed = discord.Embed(
             title=character['name'],
             url=f"https://anilist.co/character/{character['id']}"
         )
         anime_link = f"[{anime['name']}](https://anilist.co/anime/{anime['id']})"
         embed.add_field(name='Anime', value=anime_link, inline=False)
-        embed.add_field(name='Description', value=character['description'][0:1024], inline=False)
+        embed.add_field(name='Description', value=description[0:1024], inline=False)
         embed.add_field(name='Nominated by', value=self.message.author.mention, inline=False)
         embed.set_image(url=character['image'])
 
