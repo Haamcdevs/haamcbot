@@ -1,3 +1,8 @@
+import sys
+import types
+
+sys.modules.setdefault('aiohttp', types.SimpleNamespace(ClientSession=None))
+
 from anilist.anime import AnimeClient
 
 
