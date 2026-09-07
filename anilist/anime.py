@@ -66,10 +66,7 @@ class AnimeClient:
         async with aiohttp.ClientSession() as session:
             async with session.post(url, json={'query': query_string, 'variables': variables}) as response:
                 response_data = await response.json()
-        try:
-            return self.anime_def(response_data)
-        except KeyError:
-            return None
+        return self.anime_def(response_data)
 
     async def by_title(self, title: str):
         query_string = 'query ($title: String) {Media(search: $title, type: ANIME) {' + animeStructure + '}}'
@@ -83,7 +80,10 @@ class AnimeClient:
         return self.anime_def(response_data)
 
     def anime_def(self, response):
-        media = response['data']['Media']
+        data = response.get('data')
+        if not isinstance(data, dict):
+            return None
+        media = data.get('Media')
         if media is None:
             return None
         trailer = None
