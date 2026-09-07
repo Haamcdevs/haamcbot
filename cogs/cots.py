@@ -44,14 +44,14 @@ class CotsNomination(object):
         return self.anime
 
     async def get_character(self, anime):
-        character = filter(lambda char: char['id'] == self.parse_id('character'), anime['characters'])
+        character = filter(lambda char: char.id == self.parse_id('character'), anime.characters)
         for char in character:
             return char
         return None
 
     def is_character_in_anime(self, anime):
         character_id = self.parse_id('character')
-        matches = filter(lambda char: char['id'] == character_id, anime['characters'])
+        matches = filter(lambda char: char.id == character_id, anime.characters)
         for match in matches:
             return True
         return False
@@ -65,7 +65,9 @@ class CotsNomination(object):
         if len(errors) > 0:
             return errors
         anime = await self.get_anime()
-        if f"{anime['season']} {anime['season_year']}" != self.season:
+        if not anime:
+            return ['Anime niet gevonden op Anilist']
+        if f"{anime.season} {anime.season_year}" != self.season:
             errors.append('Anime is niet in het correcte seizoen')
         if not self.is_character_in_anime(anime):
             errors.append(f'Character komt niet voor in de anime')
@@ -75,22 +77,22 @@ class CotsNomination(object):
         anime = await self.get_anime()
         character = await self.get_character(anime)
         #voice_actor = next(v for v in character['voice_actors'] if v['language'] == 'Japanese')
-        return f":mens: **{character['name']}**, *{anime['name']}*" \
+        return f":mens: **{character.name}**, *{anime.name}*" \
                f"\nvotes: **{self.votes}** | door: {self.message.author.display_name}"
 
     async def create_embed(self):
         anime = await self.get_anime()
         character = await self.get_character(anime)
-        description = character['description'] or ''
+        description = character.description or ''
         embed = discord.Embed(
-            title=character['name'],
-            url=f"https://anilist.co/character/{character['id']}"
+            title=character.name,
+            url=f"https://anilist.co/character/{character.id}"
         )
-        anime_link = f"[{anime['name']}](https://anilist.co/anime/{anime['id']})"
+        anime_link = f"[{anime.name}](https://anilist.co/anime/{anime.id})"
         embed.add_field(name='Anime', value=anime_link, inline=False)
         embed.add_field(name='Description', value=description[0:1024], inline=False)
         embed.add_field(name='Nominated by', value=self.message.author.mention, inline=False)
-        embed.set_image(url=character['image'])
+        embed.set_image(url=character.image)
 
         return embed
 

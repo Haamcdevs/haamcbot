@@ -1,6 +1,9 @@
-import aiohttp
+from typing import Optional
 
-from util.html2md import html2md
+import aiohttp
+from pydantic import ValidationError
+
+from anilist.models import Anime, AnimeResponse
 
 animeStructure = '''
     id
@@ -57,73 +60,23 @@ animeStructure = '''
 
 
 class AnimeClient:
-    async def by_id(self, anime_id: int):
+    url = 'https://graphql.anilist.co'
+
+    async def by_id(self, anime_id: int) -> Optional[Anime]:
         query_string = 'query ($animeId: Int) {Media(id: $animeId, type: ANIME) {' + animeStructure + '}}'
-        variables = {
-            'animeId': anime_id
-        }
-        url = 'https://graphql.anilist.co'
-        async with aiohttp.ClientSession() as session:
-            async with session.post(url, json={'query': query_string, 'variables': variables}) as response:
-                response_data = await response.json()
-        try:
-            return self.anime_def(response_data)
-        except KeyError:
-            return None
+        return await self.fetch(query_string, {'animeId': anime_id})
 
-    async def by_title(self, title: str):
+    async def by_title(self, title: str) -> Optional[Anime]:
         query_string = 'query ($title: String) {Media(search: $title, type: ANIME) {' + animeStructure + '}}'
-        variables = {
-            'title': title
-        }
-        url = 'https://graphql.anilist.co'
-        async with aiohttp.ClientSession() as session:
-            async with session.post(url, json={'query': query_string, 'variables': variables}) as response:
-                response_data = await response.json()
-        return self.anime_def(response_data)
+        return await self.fetch(query_string, {'title': title})
 
-    def anime_def(self, response):
-        media = response['data']['Media']
-        if media is None:
+    async def fetch(self, query_string: str, variables: dict) -> Optional[Anime]:
+        payload = {'query': query_string, 'variables': variables}
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.post(self.url, json=payload) as response:
+                    response_data = await response.json(content_type=None)
+            return AnimeResponse.model_validate(response_data).anime
+        except (aiohttp.ClientError, ValueError, ValidationError) as error:
+            print(f'anilist: request for {variables} failed: {error}')
             return None
-        trailer = None
-        if media['trailer'] is not None:
-            trailer = 'https://www.youtube.com/watch?v=' + media['trailer']['id']
-        title = media['title']['romaji']
-        if media['title']['english'] is not None:
-            title = media['title']['english']
-        airdates = self.parse_airing(media)
-        characters = self.parse_characters(media)
-        return {
-            'id': media['id'],
-            'name': title,
-            'episodes': media['episodes'] or len(media["airingSchedule"]["edges"]),
-            'trailer': trailer,
-            'genres': media['genres'],
-            'season_year': media['seasonYear'],
-            'season': media['season'],
-            'starts_at': f"{media['startDate']['day'] or '?'}-"
-                         f"{media['startDate']['month'] or '?'}-"
-                         f"{media['startDate']['year'] or '?'}",
-            'image': media['coverImage']['extraLarge'],
-            'description': html2md(media['description'] or ''),
-            'airdates': airdates,
-            'characters': characters
-        }
-
-    def parse_airing(self, media):
-        airdates = []
-        for airing in media['airingSchedule']['edges']:
-            airdates.append({'time': airing['node']['airingAt'], 'episode': airing['node']['episode']})
-        return airdates
-
-    def parse_characters(self, media):
-        characters = []
-        for character in media['characters']['edges']:
-            characters.append({
-                'id': character['node']['id'],
-                'name': character['node']['name']['userPreferred'],
-                'image': character['node']['image']['large'],
-                'description': character['node']['description']
-            })
-        return characters

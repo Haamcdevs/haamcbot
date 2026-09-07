@@ -19,12 +19,12 @@ async def trailer(ctx: Context, search):
     anime = await AnimeClient().by_title(search)
     if anime is None:
         return await ctx.send(":x: Anime not found", ephemeral=True)
-    if anime['trailer'] is not None:
-        await ctx.channel.send(f":movie_camera: **{anime['name']}** trailer\n" + anime['trailer'])
+    if anime.trailer is not None:
+        await ctx.channel.send(f":movie_camera: **{anime.name}** trailer\n" + anime.trailer)
         await ctx.send('loading', ephemeral=True)
         await ctx.interaction.delete_original_response()
         return
-    await ctx.send(f":x: No trailer available for **{anime['title']}**",  ephemeral=True)
+    await ctx.send(f":x: No trailer available for **{anime.name}**",  ephemeral=True)
 
 
 async def setup(bot):

@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 import mysql.connector
 
 import config
+from anilist.models import Anime
 
 database = mysql.connector.connect(
     host=config.database['host'],
@@ -66,15 +67,15 @@ class Airing:
         self.cursor.execute(sql)
         database.commit()
 
-    def add_notifications_to_channel(self, channel_id, guild_id, anime):
-        for airdate in anime['airdates']:
+    def add_notifications_to_channel(self, channel_id, guild_id, anime: Anime):
+        for airdate in anime.airdates:
             self.store_notification(
-                anime['id'],
-                airdate['episode'],
+                anime.id,
+                airdate.episode,
                 guild_id,
                 channel_id,
-                anime['name'],
-                airdate['time']
+                anime.name,
+                airdate.time
             )
 
     def load_anime_by_anime_id(self, anime_id: int):

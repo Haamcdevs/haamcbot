@@ -3,6 +3,7 @@ import re
 from discord import ForumTag
 from discord.ext.commands import Context
 from anilist.anime import AnimeClient
+from anilist.models import Anime
 
 import config
 import discord
@@ -13,33 +14,33 @@ from util.airing import Airing
 
 
 class AnimeForm(Modal):
-    def __init__(self, anime, anilist_link):
-        super().__init__(title=f'Maak post aan voor {anime["name"]}'[0:45], timeout=None)  # Modal title
+    def __init__(self, anime: Anime, anilist_link):
+        super().__init__(title=f'Maak post aan voor {anime.name}'[0:45], timeout=None)  # Modal title
         self.anime = anime
         self.airing = Airing()
         self.anilist_link = anilist_link
-        self.name = TextInput(label='name', required=True, default=anime['name'][0:100], custom_id='name')
+        self.name = TextInput(label='name', required=True, default=(anime.name or '')[0:100], custom_id='name')
         self.add_item(self.name)
-        self.youtube = TextInput(label='Youtube trailer link', required=False, default=self.anime['trailer'], custom_id='trailer')
-        if anime['trailer'] is None:
+        self.youtube = TextInput(label='Youtube trailer link', required=False, default=self.anime.trailer, custom_id='trailer')
+        if anime.trailer is None:
             self.add_item(self.youtube)
 
     def filter_tags(self, tag: ForumTag):
-        return tag.name in self.anime['genres']
+        return tag.name in self.anime.genres
 
     async def on_submit(self, interaction: discord.Interaction):
         forum = interaction.guild.get_channel(config.channel["anime_forum"])
-        first_episode = self.anime['starts_at']
-        if len(self.anime['airdates']) and self.anime['airdates'][0]['episode'] == 1:
-            first_episode = f"<t:{self.anime['airdates'][0]['time']}:R>"
+        first_episode = self.anime.starts_at
+        if len(self.anime.airdates) and self.anime.airdates[0].episode == 1:
+            first_episode = f"<t:{self.anime.airdates[0].time}:R>"
         episodes = ''
-        if self.anime["episodes"] is not None:
-            episodes = f'* **Episodes: **{self.anime["episodes"]}\n'
-        content = f'{self.anime["description"]}\n' \
+        if self.anime.episodes is not None:
+            episodes = f'* **Episodes: **{self.anime.episodes}\n'
+        content = f'{self.anime.description}\n' \
                   f'* **First episode**: {first_episode}\n' \
                   f'{episodes}' \
                   f'* **Anilist**: <{self.anilist_link}>\n' \
-                  f'* **Image**: {self.anime["image"]}\n' \
+                  f'* **Image**: {self.anime.image}\n' \
                   f'* **Trailer**: {self.youtube.value}'
         tags = []
         filtered = filter(self.filter_tags, forum.available_tags)
