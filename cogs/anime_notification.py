@@ -32,8 +32,8 @@ class Notifications(commands.Cog):
             await ctx.send(f':x: Anime {name} not found', ephemeral=True)
             return
         self.airing.add_notifications_to_channel(channel_id, guild_id, anime)
-        episode_count = len(anime['airdates'])
-        anime_name = anime['name']
+        episode_count = len(anime.airdates)
+        anime_name = anime.name
         await ctx.send(f'Added {episode_count} airing notifications for {anime_name}')
 
     @airing.command(pass_context=True, description='Toon de wanneer de volgende episode aired.')
@@ -64,8 +64,8 @@ class Notifications(commands.Cog):
             await ctx.send(f':x: Anime {anime_id} not found', ephemeral=True)
             return
         self.airing.add_notifications_to_channel(channel_id, guild_id, anime)
-        episode_count = len(anime['airdates'])
-        anime_name = anime['name']
+        episode_count = len(anime.airdates)
+        anime_name = anime.name
         await ctx.send(f'Added **{episode_count}** upcoming airing notifications for **{anime_name}**', ephemeral=True)
 
     @commands.has_role(config.role['global_mod'])
