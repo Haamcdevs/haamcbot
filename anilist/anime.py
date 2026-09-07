@@ -76,10 +76,7 @@ class AnimeClient:
             async with aiohttp.ClientSession() as session:
                 async with session.post(self.url, json=payload) as response:
                     response_data = await response.json(content_type=None)
-            media = AnimeResponse.model_validate(response_data).data.media
+            return AnimeResponse.model_validate(response_data).anime
         except (aiohttp.ClientError, ValueError, ValidationError) as error:
             print(f'anilist: request for {variables} failed: {error}')
             return None
-        if media is None:
-            return None
-        return Anime.from_media(media)
