@@ -81,45 +81,73 @@ class Notifications(commands.Cog):
             print('anime notification: Context not ready')
             return
         # Update the anime schedule
+        for notification in await self.load_notifications():
+            await self.refresh_schedule(notification)
+        # Re-fetch notifications after update
+        last_sent = None
+        for notification in await self.load_notifications():
+            name = await self.send_notification(notification)
+            if name is not None:
+                last_sent = (name, notification['episode'])
+        if last_sent is None:
+            return
         try:
-            notifications = self.airing.load_current_notifications()
+            activity = discord.Activity(name='anime', state=f'{last_sent[0]} ep. {last_sent[1]}', type=discord.ActivityType.watching)
+            await self.ctx.change_presence(status=discord.Status.online, activity=activity)
+        except Exception as e:
+            print(f'anime notification: Failed to set watching status: {e}')
+
+    async def load_notifications(self):
+        try:
+            return self.airing.load_current_notifications()
         except mysql.connector.errors.DatabaseError:
             print('anime notification: Db connection failed')
             await self.reconnect_db()
-            return
-        for notification in notifications:
+            return []
+
+    async def refresh_schedule(self, notification):
+        # A single anime that AniList or Discord chokes on may not stop the rest of the schedule.
+        try:
             anime = await AnimeClient().by_id(notification['anime_id'])
             if anime is None:
                 print(f"Failed loading anime schedule for anime with id (AniList fucked up) {notification['anime_id']}")
-                continue
+                return
             guild = self.ctx.get_guild(notification['guild_id'])
+            if guild is None:
+                print(f"anime notification: Guild {notification['guild_id']} unavailable")
+                return
             if guild.get_channel_or_thread(notification['channel_id']) is None:
                 self.airing.clear_channel(notification['channel_id'])
-                continue
+                return
             print(f"anime notification: Updating anime schedule {notification['anime_id']}")
             self.airing.add_notifications_to_channel(notification['channel_id'], notification['guild_id'], anime)
-        # Re-fetch notifications after update
-        for notification in self.airing.load_current_notifications():
-            guild = self.ctx.get_guild(notification['guild_id'])
-            channel = guild.get_channel_or_thread(notification['channel_id'])
-            if channel is not None:
-                name = notification['anime_name'].decode('utf-8')
-                anime_post = await channel.send(f"Aflevering **{notification['episode']}** van **{name}** is uit sinds <t:{notification['airing']}:R>.\nWat vind jij van deze aflevering?")
-                await anime_post.add_reaction('1️⃣')
-                await anime_post.add_reaction('2️⃣')
-                await anime_post.add_reaction('3️⃣')
-                await anime_post.add_reaction('4️⃣')
-                await anime_post.add_reaction('5️⃣')
-                print(f"anime notification: Episode **{notification['episode']}** of **{notification['anime_name']}** airing notification sent")
-            self.airing.remove_notification(notification['id'])
-        if 'notification' not in locals() or 'name' not in locals():
-            return
-        try:
-            activity = discord.Activity(name='anime', state=f"{name} ep. {notification['episode']}", type=discord.ActivityType.watching)
-            await self.ctx.change_presence(status=discord.Status.online, activity=activity)
         except Exception as e:
-            print("Failed to set watching status")
-            return
+            print(f"anime notification: Updating schedule for {notification['anime_id']} failed: {e}")
+
+    async def send_notification(self, notification):
+        """Post one episode notification. Returns the anime name when it went out, None when it did not."""
+        name = None
+        try:
+            name = await self.post_episode(notification)
+        except Exception as e:
+            print(f"anime notification: Sending notification {notification['id']} failed: {e}")
+        try:
+            self.airing.remove_notification(notification['id'])
+        except Exception as e:
+            print(f"anime notification: Removing notification {notification['id']} failed: {e}")
+        return name
+
+    async def post_episode(self, notification):
+        guild = self.ctx.get_guild(notification['guild_id'])
+        channel = guild.get_channel_or_thread(notification['channel_id']) if guild is not None else None
+        if channel is None:
+            return None
+        name = notification['anime_name'].decode('utf-8')
+        anime_post = await channel.send(f"Aflevering **{notification['episode']}** van **{name}** is uit sinds <t:{notification['airing']}:R>.\nWat vind jij van deze aflevering?")
+        for reaction in ('1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣'):
+            await anime_post.add_reaction(reaction)
+        print(f"anime notification: Episode **{notification['episode']}** of **{name}** airing notification sent")
+        return name
 
 
     @tasks.loop(hours=24)
